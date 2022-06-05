@@ -20,6 +20,13 @@ add_executable(run_wt ${CoreSource} ${WiredTigerClientSource} wiredtiger/run_wt.
 target_link_libraries(init_wt /usr/local/lib/libwiredtiger.so pthread ${YAML_CPP_LIBRARIES})
 target_link_libraries(run_wt /usr/local/lib/libwiredtiger.so pthread ${YAML_CPP_LIBRARIES})
 
+set(WiredTigerUDPClientSource wiredtiger_udp/wt_udp_client.cpp)
+add_executable(init_wt_udp ${CoreSource} ${WiredTigerUDPClientSource} wiredtiger_udp/init_wt_udp.cpp)
+add_executable(run_wt_udp ${CoreSource} ${WiredTigerUDPClientSource} wiredtiger_udp/run_wt_udp.cpp)
+target_link_libraries(init_wt_udp pthread ${YAML_CPP_LIBRARIES})
+target_link_libraries(run_wt_udp pthread ${YAML_CPP_LIBRARIES})
+
+
 set(RedisClientSource redis/redis_client.cpp)
 add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cpp)
 add_executable(run_redis ${CoreSource} ${RedisClientSource} redis/run_redis.cpp)
