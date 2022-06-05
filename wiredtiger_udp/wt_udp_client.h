@@ -15,6 +15,8 @@ struct WiredTigerUDPClient : public Client {
 	void close() override;
 
 private:
+	int sockfd;
+
 	int do_update(char *key_buffer, char *value_buffer);
 	int do_insert(char *key_buffer, char *value_buffer);
 	int do_read(char *key_buffer, char **value);

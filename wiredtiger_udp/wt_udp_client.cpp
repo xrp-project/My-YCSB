@@ -11,7 +11,16 @@
 #include "wt_udp_client.h"
 
 WiredTigerUDPClient::WiredTigerUDPClient(WiredTigerUDPFactory *factory, int id)
-	: Client(id, factory) {}
+	: Client(id, factory) {
+
+	// Open a UDP socket per-request
+	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0) {
+        perror("cannot open socket");
+		throw std::invalid_argument("cannot open socket");
+    }
+	this->sockfd = sockfd;
+}
 
 WiredTigerUDPClient::~WiredTigerUDPClient() {}
 
@@ -33,7 +42,28 @@ int WiredTigerUDPClient::do_operation(Operation *op) {
 }
 
 int WiredTigerUDPClient::do_read(char *key_buffer, char **value) {
-	throw std::logic_error("Not implemented yet!");
+	std::string msg = std::string("GET ") + std::string(key_buffer);
+	while (true){
+		std::string ans = udp_send_receive(this->sockfd, msg.c_str(),
+									       "127.0.0.1", 11211);
+
+		// Message format:
+		// GET <key> <value>
+
+		// We may get a delayed message
+		// Skip it
+		if (ans.find("GET ") != 0) {
+			continue;
+		}
+		std::string key = ans.substr(4, ans.find(" ", 4) - 1);
+		if (key != std::string(key_buffer)) {
+			continue;
+		}
+		// We got the correct answer!
+		return 0;
+	}
+
+	return 0;
 }
 
 int WiredTigerUDPClient::do_update(char *key_buffer, char *value_buffer) {
@@ -71,15 +101,24 @@ void WiredTigerUDPFactory::destroy_client(Client *client) {
 	delete wt_client;
 }
 
-void udp_send(int sockfd, const char *msg, char *hostname, unsigned short port) {
+std::string udp_send_receive(int sockfd, const char *msg, char *hostname, unsigned short port) {
 	struct sockaddr_in servaddr = {};
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(port);
 	servaddr.sin_addr.s_addr = inet_addr(hostname);
 
-	if (sendto(sockfd, msg, strlen(msg)+1, 0, // +1 to include terminator
+	if (sendto(sockfd, msg, strlen(msg), 0,
                (sockaddr*)&servaddr, sizeof(servaddr)) < 0){
         perror("cannot send message");
 		throw std::invalid_argument("cannot send message");
     }
+
+	char incoming_msg_buf[100];
+	int nbytes = recvfrom(sockfd, incoming_msg_buf, 100, 0, NULL, NULL);
+	if (nbytes < 0) {
+		perror("cannot receive message");
+		throw std::invalid_argument("cannot receive message");
+	};
+	incoming_msg_buf[nbytes] = '\0';
+	return std::string(incoming_msg_buf);
 }
