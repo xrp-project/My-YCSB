@@ -1,6 +1,8 @@
 #ifndef YCSB_WT_CLIENT_H
 #define YCSB_WT_CLIENT_H
 
+#include <boost/uuid/random_generator.hpp>
+
 #include "client.h"
 
 
@@ -8,7 +10,10 @@ struct WiredTigerUDPFactory;
 
 struct WiredTigerUDPClient : public Client {
 
-	WiredTigerUDPClient(WiredTigerUDPFactory *factory, int id);
+	boost::uuids::random_generator& uuid_gen;
+
+	WiredTigerUDPClient(WiredTigerUDPFactory *factory, int id,
+						boost::uuids::random_generator& uuid_gen);
 	~WiredTigerUDPClient();
 	int do_operation(Operation *op) override;
 	int reset() override;
@@ -27,7 +32,6 @@ private:
 struct WiredTigerUDPFactory : public ClientFactory {
 	std::atomic<int> client_id;
 	bool print_stats;
-
 	WiredTigerUDPFactory();
 
 	WiredTigerUDPClient *create_client() override;
