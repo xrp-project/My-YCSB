@@ -3,6 +3,11 @@ project(My_YCSB)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Debug with optimizations and debug symbols. See:
+# https://stackoverflow.com/a/66261349
+# set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
+
 find_package(yaml-cpp REQUIRED)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 

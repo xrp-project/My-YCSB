@@ -149,7 +149,30 @@ int WiredTigerUDPClient::do_read(char *key_buffer, char **value) {
 }
 
 int WiredTigerUDPClient::do_update(char *key_buffer, char *value_buffer) {
-    throw std::logic_error("Not implemented yet!");
+    // Request format:
+    // SET <key> <value> <req_id>
+    std::string uuid = boost::uuids::to_string(this->uuid_gen());
+    std::string msg = std::string("SET ") + std::string(key_buffer) +
+                      std::string(" ") + std::string(value_buffer) +
+                      std::string(" ") + uuid;
+    while (true) {
+        std::string hostname = std::string("127.0.0.1");
+        std::string ans = udp_send_receive(this->sockfd, msg.c_str(),
+                                           hostname.c_str(), 11211);
+
+        // Check the id to match request and response
+        struct Response resp(ans);
+        if (resp.id != uuid) {
+            printf(
+                "Got response ID '%s', expected '%s'. Probably old response "
+                "that got delayed.",
+                resp.id.c_str(), uuid.c_str());
+            continue;
+        }
+        // We got the correct answer!
+        break;
+    }
+    return 0;
 }
 
 int WiredTigerUDPClient::do_insert(char *key_buffer, char *value_buffer) {
