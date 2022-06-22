@@ -165,7 +165,7 @@ int WiredTigerUDPClient::do_update(char *key_buffer, char *value_buffer) {
         if (resp.id != uuid) {
             printf(
                 "Got response ID '%s', expected '%s'. Probably old response "
-                "that got delayed.",
+                "that got delayed.\n",
                 resp.id.c_str(), uuid.c_str());
             continue;
         }
