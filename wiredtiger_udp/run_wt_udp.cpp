@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 	YAML::Node file = YAML::LoadFile(argv[1]);
 	WiredTigerUDPConfig config = WiredTigerUDPConfig::parse_yaml(file);
 
-	WiredTigerUDPFactory factory;
+	WiredTigerUDPFactory factory(config.wiredtiger_udp_client.server_addr);
 	OpProportion op_prop;
 	op_prop.op[READ] = config.workload.operation_proportion.read;
 	op_prop.op[UPDATE] = config.workload.operation_proportion.update;

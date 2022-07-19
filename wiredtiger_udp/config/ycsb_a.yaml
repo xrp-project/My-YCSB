@@ -26,7 +26,7 @@ workload:
   scan_length: 100
 
 # WiredTiger Parameters
-wiredtiger:
+wiredtiger_udp:
   data_dir: "/mydata/tigerhome"
   table_name: "lsm:karaage"
   conn_config: "create,direct_io=[data,checkpoint],buffer_alignment=512B,mmap=false,cache_size=128M,eviction_trigger=95,eviction_target=80,eviction=(threads_max=2,threads_min=2),statistics=(fast)"
@@ -34,3 +34,6 @@ wiredtiger:
   cursor_config: ""
   create_table_config: "key_format=S,value_format=S,allocation_size=512B,internal_page_max=512B,leaf_page_max=512B"
   print_stats: true
+
+wiredtiger_udp_client:
+  server_addr: FILLME

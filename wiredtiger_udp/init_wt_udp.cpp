@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 	YAML::Node file = YAML::LoadFile(argv[1]);
 	WiredTigerUDPConfig config = WiredTigerUDPConfig::parse_yaml(file);
 
-	WiredTigerUDPFactory factory;
+	WiredTigerUDPFactory factory(config.wiredtiger_udp_client.server_addr);
 	run_init_workload_with_op_measurement("Initialization", &factory,
 	                                      config.database.nr_entry,
 	                                      config.database.key_size,

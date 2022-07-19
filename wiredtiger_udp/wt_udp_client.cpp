@@ -200,7 +200,9 @@ WiredTigerUDPClient *WiredTigerUDPFactory::create_client() {
     return new WiredTigerUDPClient(this, this->client_id++, uuid_gen);
 }
 
-WiredTigerUDPFactory::WiredTigerUDPFactory() : client_id(0) {}
+WiredTigerUDPFactory::WiredTigerUDPFactory(const char* server_addr) : client_id(0) {
+    this->server_addr = server_addr;
+}
 
 void WiredTigerUDPFactory::destroy_client(Client *client) {
     WiredTigerUDPClient *wt_client = (WiredTigerUDPClient *)client;

@@ -31,8 +31,9 @@ private:
 
 struct WiredTigerUDPFactory : public ClientFactory {
 	std::atomic<int> client_id;
+	std::string server_addr;
 	bool print_stats;
-	WiredTigerUDPFactory();
+	WiredTigerUDPFactory(const char* server_addr);
 
 	WiredTigerUDPClient *create_client() override;
 	void destroy_client(Client *client) override;

@@ -32,8 +32,8 @@ struct WiredTigerUDPConfig {
 		long scan_length;
 	} workload;
 	struct {
-		bool print_stats;
-	} wiredtiger_udp;
+		const char *server_addr;
+	} wiredtiger_udp_client;
 
 	static WiredTigerUDPConfig parse_yaml(YAML::Node &root);
 };
@@ -65,7 +65,8 @@ WiredTigerUDPConfig WiredTigerUDPConfig::parse_yaml(YAML::Node &root) {
 	config.workload.scan_length = workload["scan_length"].as<long>();
 
 	// Add if needed!
-	// YAML::Node wiredtiger_udp = root["wiredtiger_udp"];
+	YAML::Node wiredtiger_udp_client = root["wiredtiger_udp_client"];
+	config.wiredtiger_udp_client.server_addr = wiredtiger_udp_client["server_addr"].as<string>().c_str();
 
 	return config;
 }
