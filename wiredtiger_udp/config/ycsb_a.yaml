@@ -34,6 +34,7 @@ wiredtiger_udp:
   cursor_config: ""
   create_table_config: "key_format=S,value_format=S,allocation_size=512B,internal_page_max=512B,leaf_page_max=512B"
   print_stats: true
+  nr_threads: 1
 
 wiredtiger_udp_client:
-  server_addr: FILLME
+  server_addr: 10.10.1.1
