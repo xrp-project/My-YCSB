@@ -83,8 +83,9 @@ std::string udp_send_receive(int sockfd, const char *msg, const char *hostname,
 
 WiredTigerUDPClient::WiredTigerUDPClient(
     WiredTigerUDPFactory *factory, int id,
-    boost::uuids::random_generator &uuid_gen)
+    boost::uuids::random_generator &uuid_gen, std::string server_addr)
     : Client(id, factory), uuid_gen(uuid_gen) {
+    this->server_addr = server_addr;
     // Open a UDP socket per-request
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
@@ -129,9 +130,8 @@ int WiredTigerUDPClient::do_read(char *key_buffer, char **value) {
     std::string msg =
         std::string("GET ") + std::string(key_buffer) + std::string(" ") + uuid;
     while (true) {
-        std::string hostname = std::string("127.0.0.1");
         std::string ans = udp_send_receive(this->sockfd, msg.c_str(),
-                                           hostname.c_str(), 11211);
+                                           this->server_addr.c_str(), 11211);
 
         // Check the id to match request and response
         struct Response resp(ans);
@@ -156,9 +156,8 @@ int WiredTigerUDPClient::do_update(char *key_buffer, char *value_buffer) {
                       std::string(" ") + std::string(value_buffer) +
                       std::string(" ") + uuid;
     while (true) {
-        std::string hostname = std::string("127.0.0.1");
         std::string ans = udp_send_receive(this->sockfd, msg.c_str(),
-                                           hostname.c_str(), 11211);
+                                           this->server_addr.c_str(), 11211);
 
         // Check the id to match request and response
         struct Response resp(ans);
@@ -197,10 +196,12 @@ void WiredTigerUDPClient::close() {}
 
 WiredTigerUDPClient *WiredTigerUDPFactory::create_client() {
     boost::uuids::random_generator uuid_gen;
-    return new WiredTigerUDPClient(this, this->client_id++, uuid_gen);
+    return new WiredTigerUDPClient(this, this->client_id++, uuid_gen,
+                                   this->server_addr);
 }
 
-WiredTigerUDPFactory::WiredTigerUDPFactory(const char* server_addr) : client_id(0) {
+WiredTigerUDPFactory::WiredTigerUDPFactory(const char *server_addr)
+    : client_id(0) {
     this->server_addr = server_addr;
 }
 
