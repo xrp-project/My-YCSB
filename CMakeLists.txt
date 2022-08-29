@@ -6,13 +6,15 @@ set(CMAKE_CXX_STANDARD 14)
 # Debug with optimizations and debug symbols. See:
 # https://stackoverflow.com/a/66261349
 # set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 find_package(yaml-cpp REQUIRED)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 
 include_directories(/usr/local/include)
 include_directories(core/include)
+
+set (CMAKE_CXX_FLAGS -fno-omit-frame-pointer)
 
 set(CoreSource core/client.cpp
                core/measurement.cpp
