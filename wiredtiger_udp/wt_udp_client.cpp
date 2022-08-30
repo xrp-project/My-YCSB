@@ -94,7 +94,7 @@ WiredTigerUDPClient::WiredTigerUDPClient(
     }
     struct timeval tv;
     tv.tv_sec = 0;
-    tv.tv_usec = 50000;  // 50000 us = 50 ms
+    tv.tv_usec = 500000;  // 500000 us = 500ms
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         perror("Failed to set timeout option on socket!");
         throw std::invalid_argument("Failed to set timeout option on socket!");
