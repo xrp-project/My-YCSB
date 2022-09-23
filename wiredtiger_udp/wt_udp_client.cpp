@@ -36,8 +36,15 @@ Response::Response(std::string msg) {
         // Get Response
         // Format: VALUE <value> <id>
         this->type = RESPONSE_TYPE_GET;
-        this->value = parts[1];
-        this->id = parts[2];
+        if (parts.size() >= 2)
+            this->value = parts[1];
+        else
+            this->value = "";
+
+        if (parts.size() >= 3)
+            this->id = parts[2];
+        else
+            this->id == "";
     } else if (parts[0] == "STORED") {
         // Set Response
         // Format: STORED <id>
