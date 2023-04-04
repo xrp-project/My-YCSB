@@ -12,6 +12,8 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <vector>
+#include <mutex>
 
 enum OperationType {
 	UPDATE = 0,
@@ -120,11 +122,15 @@ struct InitWorkload : public Workload {
 	unsigned int seed;
 	long cur_nr_entry;
 	char key_format[key_format_len];
+	std::vector<unsigned long> key_shuffle;
+	std::mutex lock;
+
 
 	InitWorkload(long nr_entry, long start_key, long key_size, long value_size, unsigned int seed);
 	void next_op(Operation *op) override;
 	bool has_next_op() override;
 private:
+	bool has_next_op_unsafe();
 	void generate_key_string(char *key_buffer, long key);
 	void generate_value_string(char *value_buffer);
 };

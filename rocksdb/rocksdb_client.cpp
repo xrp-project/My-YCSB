@@ -139,7 +139,18 @@ RocksDBFactory::~RocksDBFactory() {
 	this->_cache.reset();
 }
 
+void rocksdb_print_stat(rocksdb::DB *db, const char* key) {
+	fprintf(stdout, "\n==== DB: %s ===\n", db->GetName().c_str());
+	std::string stats;
+	if (!db->GetProperty(key, &stats)) {
+		stats = "(failed)";
+	}
+	fprintf(stdout, "\n%s\n", stats.c_str());
+}
+
 void RocksDBFactory::do_print_stats() {
+	rocksdb_print_stat(this->db, "rocksdb.levelstats");
+	rocksdb_print_stat(this->db, "rocksdb.stats");
 	fprintf(stderr, "Cache usage: %luMB\n", this->_cache->GetUsage() / 1000000);
 	fprintf(stdout, "=== RocksDB Stats Start ===\n");
 	fprintf(stdout, "%s\n", this->db->GetOptions().statistics->ToString().c_str());

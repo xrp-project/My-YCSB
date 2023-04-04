@@ -1,3 +1,6 @@
+#include <vector>
+#include <random>
+#include <algorithm>
 #include "workload.h"
 
 const char* operation_type_name[] = {
@@ -171,19 +174,32 @@ void ZipfianWorkload::generate_value_string(char *value_buffer) {
 InitWorkload::InitWorkload(long nr_entry, long start_key, long key_size, long value_size, unsigned int seed)
 : Workload(key_size, value_size), nr_entry(nr_entry), start_key(start_key), cur_nr_entry(0), seed(seed) {
 	sprintf(this->key_format, "%%0%ldld", key_size - 1);
+	// Generate a random shuffle of all keys from 0 to nr_entry - 1
+	for (unsigned long i = 0; i < nr_entry; ++i)
+		this->key_shuffle.push_back(i);
+	std::shuffle(this->key_shuffle.begin(), this->key_shuffle.end(), std::default_random_engine(seed));
 }
 
 bool InitWorkload::has_next_op() {
+	this->lock.lock();
+	auto ret = this->cur_nr_entry < this->nr_entry;
+	this->lock.unlock();
+	return ret;
+}
+
+bool InitWorkload::has_next_op_unsafe() {
 	return this->cur_nr_entry < this->nr_entry;
 }
 
 void InitWorkload::next_op(Operation *op) {
-	if (!this->has_next_op())
+	this->lock.lock();
+	if (!this->has_next_op_unsafe())
 		throw std::invalid_argument("does not have next op");
 	op->type = INSERT;
-	this->generate_key_string(op->key_buffer, this->start_key + this->cur_nr_entry++);
+	this->generate_key_string(op->key_buffer, this->start_key + this->key_shuffle[this->cur_nr_entry++]);
 	this->generate_value_string(op->value_buffer);
-	op->is_last_op = !this->has_next_op();
+	op->is_last_op = !this->has_next_op_unsafe();
+	this->lock.unlock();
 }
 
 void InitWorkload::generate_key_string(char *key_buffer, long key) {
@@ -326,7 +342,7 @@ void TraceWorkload::next_op(Operation *op) {
 	std::string line = this->line_list.front();
 	this->line_list.pop_front();
 
-	/* trace file format: 
+	/* trace file format:
 	 * [UPDATE/READ/READ_MODIFY_WRITE],[key string]
 	 * SCAN,[start key string],[scan length]
 	 */

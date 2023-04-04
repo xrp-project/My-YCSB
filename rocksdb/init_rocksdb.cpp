@@ -17,5 +17,6 @@ int main(int argc, char *argv[]) {
 
     run_init_workload_with_op_measurement(
         "Initialization", &factory, config.database.nr_entry,
-        config.database.key_size, config.database.value_size, 1);
+        config.database.key_size, config.database.value_size,
+        config.workload.nr_thread);
 }
