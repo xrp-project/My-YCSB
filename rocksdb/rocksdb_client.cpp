@@ -25,7 +25,7 @@ int RocksDBClient::do_operation(Operation *op) {
 	case INSERT:
 		return this->do_insert(op->key_buffer, op->value_buffer);
 	case READ:
-		return this->do_read(op->key_buffer, &op->reply_value_buffer);
+		return this->do_read(op->key_buffer, &op->value_buffer);
 	case SCAN:
 		return this->do_scan(op->key_buffer, op->scan_length);
 	case READ_MODIFY_WRITE:
@@ -44,7 +44,6 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 		fprintf(stderr, "RocksDBClient: read failed, ret: %s\n", status.ToString().c_str());
 		return -1;
 	}
-	*value = new char[value_str.size()+1];
 	memcpy(*value, value_str.c_str(), value_str.size());
 	(*value)[value_str.size()] = '\0';
 	return 0;
@@ -75,7 +74,7 @@ int RocksDBClient::do_read_modify_write(char *key_buffer, char *value_buffer) {
 		return ret;
 	}
 	delete[] old_value;
-	return this->do_update(key_buffer, value_buffer);
+	return this->do_insert(key_buffer, value_buffer);
 }
 
 int RocksDBClient::do_scan(char *key_buffer, long scan_length) {
