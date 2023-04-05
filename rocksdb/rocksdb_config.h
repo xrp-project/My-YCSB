@@ -17,6 +17,8 @@ struct RocksDBConfig {
 	struct {
 		long nr_warmup_op;
 		long nr_op;
+		long warmup_runtime_seconds;
+		long runtime_seconds;
 		int nr_thread;
 		long next_op_interval_ns;
 		struct {
@@ -50,6 +52,8 @@ RocksDBConfig RocksDBConfig::parse_yaml(YAML::Node &root) {
 	config.database.nr_entry = database["nr_entry"].as<long>();
 
 	YAML::Node workload = root["workload"];
+	config.workload.warmup_runtime_seconds = workload["warmup_runtime_seconds"].as<long>();
+	config.workload.runtime_seconds = workload["runtime_seconds"].as<long>();
 	config.workload.nr_warmup_op = workload["nr_warmup_op"].as<long>();
 	config.workload.nr_op = workload["nr_op"].as<long>();
 	config.workload.nr_thread = workload["nr_thread"].as<int>();

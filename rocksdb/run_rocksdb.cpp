@@ -22,12 +22,15 @@ int main(int argc, char *argv[]) {
 	op_prop.op[READ_MODIFY_WRITE] = config.workload.operation_proportion.read_modify_write;
 	for (int i = 0; i < 2; ++i) {
 		long nr_op;
+		long runtime_seconds;
 		if (i == 0) {
-			if (config.workload.nr_warmup_op == 0)
+			if (config.workload.nr_warmup_op == 0 && config.workload.warmup_runtime_seconds == 0)
 				continue;
 			nr_op = config.workload.nr_warmup_op;
+			runtime_seconds = config.workload.warmup_runtime_seconds;
 		} else {
 			nr_op = config.workload.nr_op;
+			runtime_seconds = config.workload.runtime_seconds;
 		}
 		if (config.workload.request_distribution == "uniform") {
 			run_uniform_workload_with_op_measurement(i == 0 ? "Uniform (Warm-Up)" : "Uniform",
@@ -39,6 +42,7 @@ int main(int argc, char *argv[]) {
 			                                         config.workload.nr_thread,
 			                                         op_prop,
 			                                         nr_op,
+													 runtime_seconds,
 			                                         config.workload.next_op_interval_ns,
 			                                         nullptr);
 		} else if (config.workload.request_distribution == "zipfian") {
@@ -52,6 +56,7 @@ int main(int argc, char *argv[]) {
 			                                         op_prop,
 			                                         config.workload.zipfian_constant,
 			                                         nr_op,
+													 runtime_seconds,
 			                                         config.workload.next_op_interval_ns,
 			                                         nullptr);
 		} else if (config.workload.request_distribution == "latest") {
@@ -64,6 +69,7 @@ int main(int argc, char *argv[]) {
 			                                        op_prop.op[READ],
 			                                        config.workload.zipfian_constant,
 			                                        nr_op,
+													runtime_seconds,
 			                                        config.workload.next_op_interval_ns,
 			                                        nullptr);
 		} else if (config.workload.request_distribution == "trace") {
@@ -74,6 +80,7 @@ int main(int argc, char *argv[]) {
 			                                       config.workload.nr_thread,
 			                                       config.workload.trace_file_list,
 			                                       nr_op,
+												   runtime_seconds,
 			                                       config.workload.next_op_interval_ns,
 			                                       nullptr);
 		} else {
