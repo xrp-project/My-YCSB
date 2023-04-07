@@ -1,8 +1,8 @@
 # Database Parameters
 database:
   key_size: 16
-  value_size: 100
-  nr_entry: 1073741824
+  value_size: 200
+  nr_entry: 536870912
   # nr_entry: 1073741824
 
 # Workload Parameters
@@ -30,7 +30,7 @@ workload:
 
 # RocksDB Parameters
 rocksdb:
-  data_dir: "/mydata/rocksdb_db"
+  data_dir: "/nvme/rocksdb"
   options_file: "/mydata/My-YCSB/rocksdb/config/rocksdb_rubble_16gb_config.ini"
   cache_size: 100000000
   print_stats: true

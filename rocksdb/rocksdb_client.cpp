@@ -41,7 +41,7 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 	std::string value_str;
 	status = this->db->Get(rocksdb::ReadOptions(), key_buffer, &value_str);
 	if (!status.ok()) {
-		fprintf(stderr, "RocksDBClient: read failed, ret: %s\n", status.ToString().c_str());
+		fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
 		return -1;
 	}
 	memcpy(*value, value_str.c_str(), value_str.size());
@@ -68,12 +68,12 @@ int RocksDBClient::do_insert(char *key_buffer, char *value_buffer) {
 
 int RocksDBClient::do_read_modify_write(char *key_buffer, char *value_buffer) {
 	int ret;
-	char *old_value;
+	char *old_value = new char[strlen(value_buffer)+1];
 	ret = this->do_read(key_buffer, &old_value);
+	delete[] old_value;
 	if (ret != 0) {
 		return ret;
 	}
-	delete[] old_value;
 	return this->do_insert(key_buffer, value_buffer);
 }
 

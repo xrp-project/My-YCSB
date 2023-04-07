@@ -10,11 +10,11 @@ workload:
   warmup_runtime_seconds: 60
   runtime_seconds: 120
   nr_op: 10000000
-  nr_thread: 1
+  nr_thread: 6
   next_op_interval_ns: 0  # use 50000 on mars
   operation_proportion:
-    read: 0.95
-    update: 0.05
+    read: 1
+    update: 0
     insert: 0
     scan: 0
     read_modify_write: 0
@@ -29,7 +29,7 @@ workload:
 
 # RocksDB Parameters
 rocksdb:
-  data_dir: "/mydata/rocksdb_db"
-  options_file: "/mydata/My-YCSB/rocksdb/config/rocksdb_rubble_16gb_config.ini"
+  data_dir: "/nvme/rocksdb_bigger"
+  options_file: "/mydata/My-YCSB/rocksdb/config_bigger/rocksdb_rubble_16gb_config.ini"
   cache_size: 100000000
   print_stats: true

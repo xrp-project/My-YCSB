@@ -51,10 +51,10 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement, long runtim
 		}
 		printf("total throughput %.2lf ops/sec\n", total_throughput);
 		curr_time = std::chrono::steady_clock::now();
-		// std::cout << "runtime seconds: " << runtime_seconds << std::endl;
-		// std::cout << "start time: " << start_time.time_since_epoch().count() << std::endl;
-		// std::cout << "curr time: " << curr_time.time_since_epoch().count() << std::endl;
-		// std::cout << "duration seconds: " << std::chrono::duration_cast<std::chrono::seconds>(curr_time - start_time).count() << std::endl;
+		// std::cerr << "runtime seconds: " << runtime_seconds << std::endl;
+		// std::cerr << "start time: " << start_time.time_since_epoch().count() << std::endl;
+		// std::cerr << "curr time: " << curr_time.time_since_epoch().count() << std::endl;
+		// std::cerr << "duration seconds: " << std::chrono::duration_cast<std::chrono::seconds>(curr_time - start_time).count() << std::endl;
 		if (runtime_seconds > 0 && std::chrono::duration_cast<std::chrono::seconds>(curr_time - start_time).count() >= runtime_seconds) {
 			std::cout << "time's up!" << std::endl;
 			measurement->finished = true;
@@ -62,7 +62,7 @@ void monitor_thread_fn(const char *task, OpMeasurement *measurement, long runtim
 		std::cout << std::flush;
 	}
 	printf("%s: calculating overall performance metrics... (might take a while)\n", task);
-	std::cout << std::flush;
+	std::cerr << std::flush;
 	measurement->final_result_lock.lock();
 
 	/* print throughput */

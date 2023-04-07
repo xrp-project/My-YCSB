@@ -7,7 +7,7 @@ find_package(yaml-cpp REQUIRED)
 include_directories(${YAML_CPP_INCLUDE_DIR})
 # Debug mode
 # set(CMAKE_BUILD_TYPE Debug)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -rdynamic")
 
 include_directories(/usr/local/include)
 include_directories(core/include)
