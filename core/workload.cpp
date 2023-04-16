@@ -175,9 +175,11 @@ InitWorkload::InitWorkload(long nr_entry, long start_key, long key_size, long va
 : Workload(key_size, value_size), nr_entry(nr_entry), start_key(start_key), cur_nr_entry(0), seed(seed) {
 	sprintf(this->key_format, "%%0%ldld", key_size - 1);
 	// Generate a random shuffle of all keys from 0 to nr_entry - 1
+	printf("Generating a random shuffle of all keys from 0 to %ld - 1\n", nr_entry);
 	for (unsigned long i = 0; i < nr_entry; ++i)
 		this->key_shuffle.push_back(i);
 	std::shuffle(this->key_shuffle.begin(), this->key_shuffle.end(), std::default_random_engine(seed));
+	printf("Done generating a random shuffle of all keys from 0 to %ld - 1\n", nr_entry);
 }
 
 bool InitWorkload::has_next_op() {
