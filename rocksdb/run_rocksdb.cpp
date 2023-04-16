@@ -1,4 +1,5 @@
 #include <iostream>
+#include<unistd.h>
 #include "worker.h"
 #include "rocksdb_client.h"
 #include "rocksdb_config.h"
@@ -14,6 +15,7 @@ int main(int argc, char *argv[]) {
     RocksDBFactory factory(config.rocksdb.data_dir, config.rocksdb.options_file,
                            config.rocksdb.cache_size,
                            config.rocksdb.print_stats);
+	sleep(5);
 	OpProportion op_prop;
 	op_prop.op[READ] = config.workload.operation_proportion.read;
 	op_prop.op[UPDATE] = config.workload.operation_proportion.update;
