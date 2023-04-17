@@ -19,20 +19,31 @@ RocksDBClient::RocksDBClient(RocksDBFactory *factory, int id)
 RocksDBClient::~RocksDBClient() {}
 
 int RocksDBClient::do_operation(Operation *op) {
+	int ret = 0;
+repeat:
 	switch (op->type) {
 	case UPDATE:
-		return this->do_update(op->key_buffer, op->value_buffer);
+		ret = this->do_update(op->key_buffer, op->value_buffer);
+		break;
 	case INSERT:
-		return this->do_insert(op->key_buffer, op->value_buffer);
+		ret = this->do_insert(op->key_buffer, op->value_buffer);
+		break;
 	case READ:
-		return this->do_read(op->key_buffer, &op->value_buffer);
+		ret = this->do_read(op->key_buffer, &op->value_buffer);
+		break;
 	case SCAN:
-		return this->do_scan(op->key_buffer, op->scan_length);
+		ret = this->do_scan(op->key_buffer, op->scan_length);
+		break;
 	case READ_MODIFY_WRITE:
-		return this->do_read_modify_write(op->key_buffer, op->value_buffer);
+		ret = this->do_read_modify_write(op->key_buffer, op->value_buffer);
+		break;
 	default:
 		throw std::invalid_argument("invalid op type");
 	}
+	if (ret < 0) {
+		goto repeat;
+	}
+	return ret;
 }
 
 int RocksDBClient::do_read(char *key_buffer, char **value) {
@@ -41,7 +52,7 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 	std::string value_str;
 	status = this->db->Get(rocksdb::ReadOptions(), key_buffer, &value_str);
 	if (!status.ok()) {
-		fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
+		// fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
 		return -1;
 	}
 	memcpy(*value, value_str.c_str(), value_str.size());
