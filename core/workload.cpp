@@ -34,22 +34,25 @@ void UniformWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	double op_random = this->generate_random_double(&this->seed);
-	double running_sum = 0;
-	if (running_sum += this->op_prop.op[UPDATE], op_random <= running_sum) {
+	int op_random_int = (int) (op_random * 100) % 101;
+	int running_sum = 0;
+	if (running_sum += int(this->op_prop.op[UPDATE] * 100), op_random_int <= running_sum) {
 		op->type = UPDATE;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += this->op_prop.op[INSERT], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[INSERT] * 100), op_random_int <= running_sum) {
 		op->type = INSERT;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += this->op_prop.op[READ], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ] * 100), op_random_int <= running_sum) {
 		op->type = READ;
-	} else if (running_sum += this->op_prop.op[SCAN], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[SCAN] * 100), op_random_int <= running_sum) {
 		op->type = SCAN;
 		op->scan_length = this->scan_length;
-	} else if (running_sum += this->op_prop.op[READ_MODIFY_WRITE], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ_MODIFY_WRITE] * 100), op_random_int <= running_sum) {
 		op->type = READ_MODIFY_WRITE;
 		this->generate_value_string(op->value_buffer);
 	} else {
+		printf("op_random_int = %d, running_sum = %d, op_random_int == running_sum: %d\n", op_random_int, running_sum, op_random_int == running_sum);
+		printf("op_prop = %f, %f, %f, %f, %f\n", this->op_prop.op[UPDATE], this->op_prop.op[INSERT], this->op_prop.op[READ], this->op_prop.op[SCAN], this->op_prop.op[READ_MODIFY_WRITE]);
 		throw std::invalid_argument("failed to generate an operation");
 	}
 	long key = this->generate_random_long(&this->seed) % this->nr_entry;
@@ -99,22 +102,25 @@ void ZipfianWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	double op_random = this->generate_random_double(&this->seed);
-	double running_sum = 0;
-	if (running_sum += this->op_prop.op[UPDATE], op_random <= running_sum) {
+	int op_random_int = (int) (op_random * 100) % 101;
+	int running_sum = 0;
+	if (running_sum += int(this->op_prop.op[UPDATE] * 100), op_random_int <= running_sum) {
 		op->type = UPDATE;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += this->op_prop.op[INSERT], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[INSERT] * 100), op_random_int <= running_sum) {
 		op->type = INSERT;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += this->op_prop.op[READ], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ] * 100), op_random_int <= running_sum) {
 		op->type = READ;
-	} else if (running_sum += this->op_prop.op[SCAN], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[SCAN] * 100), op_random_int <= running_sum) {
 		op->type = SCAN;
 		op->scan_length = this->scan_length;
-	} else if (running_sum += this->op_prop.op[READ_MODIFY_WRITE], op_random <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ_MODIFY_WRITE] * 100), op_random_int <= running_sum) {
 		op->type = READ_MODIFY_WRITE;
 		this->generate_value_string(op->value_buffer);
 	} else {
+		printf("op_random_int = %d, running_sum = %d, op_random_int == running_sum: %d\n", op_random_int, running_sum, op_random_int == running_sum);
+		printf("op_prop = %f, %f, %f, %f, %f\n", this->op_prop.op[UPDATE], this->op_prop.op[INSERT], this->op_prop.op[READ], this->op_prop.op[SCAN], this->op_prop.op[READ_MODIFY_WRITE]);
 		throw std::invalid_argument("failed to generate an operation");
 	}
 	unsigned long key = this->generate_zipfian_random_ulong(true) % ((unsigned long) this->nr_entry);

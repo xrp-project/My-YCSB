@@ -5,6 +5,7 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 	Operation op;
 	op.key_buffer = new char[workload->key_size];
 	op.value_buffer = new char[workload->value_size];
+	op.value_buffer_size = workload->value_size;
 	std::chrono::steady_clock::time_point start_time, finish_time;
 	std::chrono::steady_clock::time_point next_op_time = std::chrono::steady_clock::now();
 
