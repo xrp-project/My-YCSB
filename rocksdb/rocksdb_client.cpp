@@ -41,7 +41,7 @@ repeat:
 		throw std::invalid_argument("invalid op type");
 	}
 	if (ret < 0) {
-		goto repeat;
+		std::cout << "Key failed: " << op->key_buffer << std::endl;
 	}
 	return ret;
 }
