@@ -42,6 +42,7 @@ repeat:
 	}
 	if (ret < 0) {
 		std::cout << "Key failed: " << op->key_buffer << std::endl;
+		//goto repeat;
 	}
 	return ret;
 }
@@ -50,10 +51,15 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 	rocksdb::Status status;
 	rocksdb::Slice key(key_buffer);
 	std::string value_str;
-	status = this->db->Get(rocksdb::ReadOptions(), key_buffer, &value_str);
+
+	rocksdb::ReadOptions read_options = rocksdb::ReadOptions();
+
+	status = this->db->Get(read_options, key_buffer, &value_str);
 	if (!status.ok()) {
-		// fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
-		return -1;
+		fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
+		read_options.force_sample = true;
+		status = this->db->Get(read_options, key_buffer, &value_str);
+		if (!status.ok()) return -1;
 	}
 	memcpy(*value, value_str.c_str(), value_str.size());
 	(*value)[value_str.size()] = '\0';
