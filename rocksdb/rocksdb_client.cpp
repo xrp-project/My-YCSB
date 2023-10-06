@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <atomic>
 
 #include "rocksdb_client.h"
 #include "rocksdb/cache.h"
@@ -10,11 +11,11 @@
 #include "rocksdb/statistics.h"
 #include "rocksdb/utilities/options_util.h"
 
+std::atomic<unsigned int> key_fails = 0;
 
 RocksDBClient::RocksDBClient(RocksDBFactory *factory, int id)
 	: Client(id, factory) {
 	this->db = factory->db;
-	this->key_fails = 0;
 	}
 
 RocksDBClient::~RocksDBClient() {}
@@ -58,7 +59,7 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 	status = this->db->Get(read_options, key_buffer, &value_str);
 	if (!status.ok()) {
 		//fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
-		this->key_fails++;
+		++key_fails;
 
 		read_options.force_sample = true;
 		status = this->db->Get(read_options, key_buffer, &value_str);
@@ -110,7 +111,6 @@ RocksDBFactory::RocksDBFactory(std::string data_dir, std::string options_file,
 							   int cache_size, bool print_stats): client_id(0) {
 	this->data_dir = data_dir;
 	this->print_stats = print_stats;
-	this->key_fails = 0;
 
 	rocksdb::Status status;
 	rocksdb::Options options;
@@ -173,7 +173,7 @@ void RocksDBFactory::do_print_stats() {
 	rocksdb_print_stat(this->db, "rocksdb.levelstats");
 	rocksdb_print_stat(this->db, "rocksdb.stats");
 	fprintf(stderr, "Cache usage: %luMB\n", this->_cache->GetUsage() / 1000000);
-	fprintf(stdout, "Key fails: %d\n\n", key_fails);
+	fprintf(stdout, "Key fails: %d\n", key_fails.load());
 	fprintf(stdout, "=== RocksDB Stats Start ===\n");
 	fprintf(stdout, "%s\n", this->db->GetOptions().statistics->ToString().c_str());
 	fprintf(stdout, "=== RocksDB Stats End ===\n");
@@ -182,7 +182,7 @@ void RocksDBFactory::do_print_stats() {
 void RocksDBFactory::reset_stats() {
 	// Start gathering RocksDB stats
 	this->db->GetOptions().statistics->Reset();
-	this->key_fails = 0;
+	key_fails = 0;
 }
 
 RocksDBClient * RocksDBFactory::create_client() {
@@ -191,6 +191,5 @@ RocksDBClient * RocksDBFactory::create_client() {
 
 void RocksDBFactory::destroy_client(Client *client) {
 	RocksDBClient *rocksdb_client = (RocksDBClient *)client;
-	this->key_fails += rocksdb_client->key_fails;
 	delete rocksdb_client;
 }

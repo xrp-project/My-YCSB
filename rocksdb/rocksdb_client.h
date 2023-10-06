@@ -14,7 +14,6 @@ struct RocksDBClient : public Client {
 	int do_operation(Operation *op) override;
 	int reset() override;
 	void close() override;
-	int key_fails;
 
 private:
 	int do_update(char *key_buffer, char *value_buffer);
@@ -29,7 +28,6 @@ struct RocksDBFactory : public ClientFactory {
 	std::atomic<int> client_id;
 	std::string data_dir;
 	bool print_stats;
-	int key_fails;
 
 	// Private fields
 	std::shared_ptr<rocksdb::Cache> _cache;
