@@ -212,3 +212,25 @@ void run_trace_workload_with_op_measurement(const char *task, ClientFactory *fac
 	}
 	delete[] workload_arr;
 }
+
+void run_init_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size,
+                                            int nr_thread, std::list<std::string> trace_file_list, long nr_op, long runtime_seconds,
+											long next_op_interval_ns, const char *latency_file) {
+	// only support 1 thread
+	nr_thread = 1;
+	
+	InitTraceWorkload **workload_arr = new InitTraceWorkload *[nr_thread];
+	std::list<std::string>::iterator trace_file_iter = trace_file_list.begin();
+	printf("TraceWorkload: start loading trace files, might take a while\n");
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index, ++trace_file_iter) {
+		workload_arr[thread_index] = new InitTraceWorkload(key_size, value_size, nr_op, *trace_file_iter, thread_index);
+	}
+
+	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, 0, 0, 0, 0, nullptr);
+
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		delete workload_arr[thread_index];
+	}
+	delete[] workload_arr;
+}
+
