@@ -392,3 +392,42 @@ void TraceWorkload::generate_value_string(char *value_buffer) {
 	}
 	value_buffer[this->value_size - 1] = '\0';
 }
+
+InitTraceWorkload::InitTraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed) : TraceWorkload(key_size, value_size, nr_op, trace_path, seed) {
+	this->trace_file.open(this->trace_path);
+	if (!this->trace_file.is_open())
+		throw std::invalid_argument("unable to open trace file");
+	
+	std::string line;
+	long trace_nr_op = 0;
+	while (std::getline(this->trace_file, line)) {
+		this->line_list.push_back(line);
+		++trace_nr_op;
+	}
+	this->trace_file.close();
+
+	this->nr_op = trace_nr_op;
+}
+
+void InitTraceWorkload::next_op(Operation *op) {
+	if (!this->has_next_op())
+		throw std::invalid_argument("does not have next op");
+
+	std::string line = this->line_list.front();
+	this->line_list.pop_front();
+
+	std::stringstream line_stream(line);
+	std::string op_type, key;
+	if (!std::getline(line_stream, op_type, ','))
+		throw std::invalid_argument("failed to get the op type");
+	if (!std::getline(line_stream, key, ','))
+		throw std::invalid_argument("failed to get the key");
+
+	op->type = INSERT;
+	this->generate_value_string(op->value_buffer);
+
+	strcpy(op->key_buffer, key.c_str());
+	++this->cur_nr_op;
+	op->is_last_op = !this->has_next_op();
+}
+

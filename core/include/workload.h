@@ -185,8 +185,13 @@ struct TraceWorkload : public Workload {
 	void next_op(Operation *op) override;
 	bool has_next_op() override;
 
-private:
+protected:
 	void generate_value_string(char *value_buffer);
+};
+
+struct InitTraceWorkload : public TraceWorkload {
+    InitTraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed);
+    void next_op(Operation *op);
 };
 
 #endif //YCSB_WORKLOAD_H

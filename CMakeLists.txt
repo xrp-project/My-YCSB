@@ -65,8 +65,11 @@ target_link_libraries(run_wt /usr/local/lib/libwiredtiger.so pthread ${YAML_CPP_
 # Add the same for RocksDB
 set(RocksDBClientSource rocksdb/rocksdb_client.cpp)
 add_executable(init_rocksdb ${CoreSource} ${RocksDBClientSource} rocksdb/init_rocksdb.cpp)
+add_executable(init_trace_rocksdb ${CoreSource} ${RocksDBClientSource} rocksdb/init_trace_rocksdb.cpp)
+
 add_executable(run_rocksdb ${CoreSource} ${RocksDBClientSource} rocksdb/run_rocksdb.cpp)
 target_link_libraries(init_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES})
+target_link_libraries(init_trace_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES})
 target_link_libraries(run_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES})
 
 set(RedisClientSource redis/redis_client.cpp)
