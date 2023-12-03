@@ -202,7 +202,7 @@ void run_trace_workload_with_op_measurement(const char *task, ClientFactory *fac
 	std::list<std::string>::iterator trace_file_iter = trace_file_list.begin();
 	printf("TraceWorkload: start loading trace files, might take a while\n");
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index, ++trace_file_iter) {
-		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, *trace_file_iter, thread_index);
+		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, *trace_file_iter, thread_index);
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, runtime_seconds, nr_thread * nr_op, next_op_interval_ns, latency_file);
@@ -223,7 +223,7 @@ void run_init_trace_workload_with_op_measurement(const char *task, ClientFactory
 	std::list<std::string>::iterator trace_file_iter = trace_file_list.begin();
 	printf("TraceWorkload: start loading trace files, might take a while\n");
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index, ++trace_file_iter) {
-		workload_arr[thread_index] = new InitTraceWorkload(key_size, value_size, nr_op, *trace_file_iter, thread_index);
+		workload_arr[thread_index] = new InitTraceWorkload(key_size, value_size, *trace_file_iter, thread_index);
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, 0, 0, 0, 0, nullptr);

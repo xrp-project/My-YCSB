@@ -1,7 +1,13 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+
 #include "workload.h"
+
 
 const char* operation_type_name[] = {
 	"UPDATE", "INSERT", "READ", "SCAN", "READ_MODIFY_WRITE"
@@ -325,36 +331,43 @@ void LatestWorkload::generate_value_string(char *value_buffer) {
 	value_buffer[this->value_size - 1] = '\0';
 }
 
-TraceWorkload::TraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed)
-: Workload(key_size, value_size), nr_op(nr_op), trace_path(trace_path), cur_nr_op(0), seed(seed) {
-	this->trace_file.open(this->trace_path);
-	if (!this->trace_file.is_open())
-		throw std::invalid_argument("unable to open trace file");
-	for (long i = 0; i < nr_op; ++i) {
-		std::string line;
-		if (!std::getline(this->trace_file, line))
-			throw std::invalid_argument("failed to get the next line from the trace file");
-		this->line_list.push_back(line);
-	}
-	this->trace_file.close();
+TraceWorkload::TraceWorkload(long key_size, long value_size, std::string trace_path, unsigned int seed)
+: Workload(key_size, value_size), trace_path(trace_path), cur_nr_op(0), seed(seed) {
+    this->fileBuffer = std::make_unique<io::stream_buffer<io::file_descriptor_source>>(trace_path, std::ios::binary);
+    this->trace_file = std::make_unique<std::istream>(fileBuffer.get());
+	this->done = false;
+
+    if (!(*trace_file))
+        throw std::invalid_argument("unable to open trace file");
+}
+
+std::string next_line(std::istream& trace_file) {
+    if (!trace_file || trace_file.eof()) {
+        return "";
+    }
+
+    std::string line;
+    if (std::getline(trace_file, line)) {
+        return line;
+    }
+    return "";
 }
 
 bool TraceWorkload::has_next_op() {
-	return this->cur_nr_op < this->nr_op;
+	return !this->done;
 }
 
 void TraceWorkload::next_op(Operation *op) {
-	if (!this->has_next_op())
-		throw std::invalid_argument("does not have next op");
+    std::string line = next_line(*trace_file);
+    if (line.empty()) {
+        op->is_last_op = true;
+		this->done = true;
 
-	std::string line = this->line_list.front();
-	this->line_list.pop_front();
+		return;
+    }
 
-	/* trace file format:
-	 * [UPDATE/READ/READ_MODIFY_WRITE],[key string]
-	 * SCAN,[start key string],[scan length]
-	 */
-	std::stringstream line_stream(line);
+	std::stringstream line_stream(line); 
+
 	std::string op_type, key;
 	if (!std::getline(line_stream, op_type, ','))
 		throw std::invalid_argument("failed to get the op type");
@@ -383,7 +396,6 @@ void TraceWorkload::next_op(Operation *op) {
 	}
 	strcpy(op->key_buffer, key.c_str());
 	++this->cur_nr_op;
-	op->is_last_op = !this->has_next_op();
 }
 
 void TraceWorkload::generate_value_string(char *value_buffer) {
@@ -393,31 +405,30 @@ void TraceWorkload::generate_value_string(char *value_buffer) {
 	value_buffer[this->value_size - 1] = '\0';
 }
 
-InitTraceWorkload::InitTraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed) : TraceWorkload(key_size, value_size, nr_op, trace_path, seed) {
-	this->trace_file.open(this->trace_path);
-	if (!this->trace_file.is_open())
-		throw std::invalid_argument("unable to open trace file");
-	
-	std::string line;
-	long trace_nr_op = 0;
-	while (std::getline(this->trace_file, line)) {
-		this->line_list.push_back(line);
-		++trace_nr_op;
-	}
-	this->trace_file.close();
+InitTraceWorkload::InitTraceWorkload(long key_size, long value_size, std::string trace_path, unsigned int seed)
+: TraceWorkload(key_size, value_size, trace_path, seed) {
+    this->fileBuffer = std::make_unique<io::stream_buffer<io::file_descriptor_source>>(trace_path, std::ios::binary);
+    this->trace_file = std::make_unique<std::istream>(fileBuffer.get());
+    this->done = false;
 
-	this->nr_op = trace_nr_op;
+    if (!(*trace_file))
+        throw std::invalid_argument("unable to open trace file");
+}
+
+bool InitTraceWorkload::has_next_op() {
+    return !this->done;
 }
 
 void InitTraceWorkload::next_op(Operation *op) {
-	if (!this->has_next_op())
-		throw std::invalid_argument("does not have next op");
+    std::string line = next_line(*trace_file);
+    if (line.empty()) {
+        op->is_last_op = true;
+        this->done = true;
+        return;
+    }
 
-	std::string line = this->line_list.front();
-	this->line_list.pop_front();
-
-	std::stringstream line_stream(line);
-	std::string op_type, key;
+    std::stringstream line_stream(line);
+    std::string op_type, key;
 	if (!std::getline(line_stream, op_type, ','))
 		throw std::invalid_argument("failed to get the op type");
 	if (!std::getline(line_stream, key, ','))
@@ -428,6 +439,5 @@ void InitTraceWorkload::next_op(Operation *op) {
 
 	strcpy(op->key_buffer, key.c_str());
 	++this->cur_nr_op;
-	op->is_last_op = !this->has_next_op();
 }
 

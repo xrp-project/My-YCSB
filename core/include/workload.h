@@ -14,6 +14,13 @@
 #include <list>
 #include <vector>
 #include <mutex>
+#include <memory>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
+
+
+namespace io = boost::iostreams;
+
 
 enum OperationType {
 	UPDATE = 0,
@@ -172,26 +179,29 @@ private:
 
 struct TraceWorkload : public Workload {
 	/* configuration */
-	long nr_op;
 	std::string trace_path;
 
 	/* states */
 	unsigned int seed;
 	long cur_nr_op;
-	std::ifstream trace_file;
-	std::list<std::string> line_list;
+	
+	bool done;
 
-	TraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed);
+	TraceWorkload(long key_size, long value_size, std::string trace_path, unsigned int seed);
 	void next_op(Operation *op) override;
 	bool has_next_op() override;
 
 protected:
+    std::unique_ptr<io::stream_buffer<io::file_descriptor_source>> fileBuffer;
+    std::unique_ptr<std::istream> trace_file;
+
 	void generate_value_string(char *value_buffer);
 };
 
 struct InitTraceWorkload : public TraceWorkload {
-    InitTraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed);
+    InitTraceWorkload(long key_size, long value_size, std::string trace_path, unsigned int seed);
     void next_op(Operation *op);
+	bool has_next_op();
 };
 
 #endif //YCSB_WORKLOAD_H
