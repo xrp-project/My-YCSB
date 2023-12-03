@@ -69,8 +69,8 @@ add_executable(init_trace_rocksdb ${CoreSource} ${RocksDBClientSource} rocksdb/i
 
 add_executable(run_rocksdb ${CoreSource} ${RocksDBClientSource} rocksdb/run_rocksdb.cpp)
 target_link_libraries(init_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES})
-target_link_libraries(init_trace_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES})
-target_link_libraries(run_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES})
+target_link_libraries(init_trace_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES} boost_iostreams)
+target_link_libraries(run_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CPP_LIBRARIES} boost_iostreams)
 
 set(RedisClientSource redis/redis_client.cpp)
 add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cpp)
