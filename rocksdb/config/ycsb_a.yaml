@@ -30,7 +30,7 @@ workload:
 
 # RocksDB Parameters
 rocksdb:
-  data_dir: "/nvme/rocksdb"
+  data_dir: "/mydata/rocksdb_data"
   options_file: "/mydata/My-YCSB/rocksdb/config/rocksdb_rubble_16gb_config.ini"
-  cache_size: 100000000
+  cache_size: 0
   print_stats: true

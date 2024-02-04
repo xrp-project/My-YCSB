@@ -61,7 +61,6 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 		//fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
 		++key_fails;
 
-		read_options.force_sample = true;
 		status = this->db->Get(read_options, key_buffer, &value_str);
 		if (!status.ok()) return -1;
 	}
