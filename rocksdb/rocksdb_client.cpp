@@ -61,11 +61,14 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 		fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
 		++key_fails;
 
-		#ifdef CONFIG_BPFOF
+#ifdef CONFIG_BPFOF
 		read_options.force_sample = true;
-		#endif
 		status = this->db->Get(read_options, key_buffer, &value_str);
-		if (!status.ok()) return -1;
+		if (!status.ok())
+			return -1;
+#else
+		return -1;
+#endif
 	}
 	memcpy(*value, value_str.c_str(), value_str.size());
 	(*value)[value_str.size()] = '\0';
@@ -101,8 +104,24 @@ int RocksDBClient::do_read_modify_write(char *key_buffer, char *value_buffer) {
 }
 
 int RocksDBClient::do_scan(char *key_buffer, long scan_length) {
-	// Unimplemented
-	throw std::invalid_argument("scan not implemented for rocksdb");
+    rocksdb::Iterator* it = this->db->NewIterator(rocksdb::ReadOptions());
+    std::string start_key(key_buffer);
+    int count = 0;
+    
+    for (it->Seek(start_key); it->Valid() && count < scan_length; it->Next()) {
+        // Process the key-value pair pointed by the iterator
+        // For example, print them out, store them, etc.
+        // std::cout << it->key().ToString() << ": "  << it->value().ToString() << std::endl;
+        ++count;
+    }
+
+    if (!it->status().ok()) { // Check for any errors found during the scan
+        delete it;
+        return -1;
+    }
+
+    delete it;
+    return 0;
 }
 
 int RocksDBClient::reset() {return 0;}
@@ -127,8 +146,11 @@ RocksDBFactory::RocksDBFactory(std::string data_dir, std::string options_file,
 	}
 	this->_cache = rocksdb::NewLRUCache(cache_size);
 
+    // make config_options
+    rocksdb::ConfigOptions config_options;
+
 	if (options_file != "") {
-		status = rocksdb::LoadOptionsFromFile(options_file, rocksdb::Env::Default(), &db_options, &cf_descs);
+		status = rocksdb::LoadOptionsFromFile(config_options, options_file, &db_options, &cf_descs);
 		if (!status.ok()) {
 			fprintf(stderr, "RocksDBFactory: failed to load options from file, ret: %s\n", status.ToString().c_str());
 			throw std::invalid_argument("failed to load options from file");
@@ -174,8 +196,7 @@ void rocksdb_print_stat(rocksdb::DB *db, const char* key) {
 void RocksDBFactory::do_print_stats() {
 	rocksdb_print_stat(this->db, "rocksdb.levelstats");
 	rocksdb_print_stat(this->db, "rocksdb.stats");
-	fprintf(stderr, "Cache usage: %luMB\n", this->_cache->GetUsage() / 1000000);
-	fprintf(stdout, "Key fails: %d\n", key_fails.load());
+	//fprintf(stderr, "Cache usage: %luMB\n", this->_cache->GetUsage() / 1000000);
 	fprintf(stdout, "=== RocksDB Stats Start ===\n");
 	fprintf(stdout, "%s\n", this->db->GetOptions().statistics->ToString().c_str());
 	fprintf(stdout, "=== RocksDB Stats End ===\n");
