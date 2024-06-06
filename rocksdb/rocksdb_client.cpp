@@ -58,10 +58,12 @@ int RocksDBClient::do_read(char *key_buffer, char **value) {
 
 	status = this->db->Get(read_options, key_buffer, &value_str);
 	if (!status.ok()) {
-		//fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
+		fprintf(stderr, "RocksDBClient: read failed, key: %s ret: %s\n", key_buffer, status.ToString().c_str());
 		++key_fails;
 
+		#ifdef CONFIG_BPFOF
 		read_options.force_sample = true;
+		#endif
 		status = this->db->Get(read_options, key_buffer, &value_str);
 		if (!status.ok()) return -1;
 	}
@@ -108,7 +110,7 @@ int RocksDBClient::reset() {return 0;}
 void RocksDBClient::close() {}
 
 RocksDBFactory::RocksDBFactory(std::string data_dir, std::string options_file,
-							   int cache_size, bool print_stats): client_id(0) {
+							   long long cache_size, bool print_stats): client_id(0) {
 	this->data_dir = data_dir;
 	this->print_stats = print_stats;
 
@@ -118,7 +120,7 @@ RocksDBFactory::RocksDBFactory(std::string data_dir, std::string options_file,
 	std::vector<rocksdb::ColumnFamilyDescriptor> cf_descs;
 	std::vector<rocksdb::ColumnFamilyHandle *> cf_handles;
 
-	fprintf(stderr, "RocksDBFactory: data_dir: %s, options_file: %s, cache_size: %dMB, print_stats: %d\n",
+	fprintf(stderr, "RocksDBFactory: data_dir: %s, options_file: %s, cache_size: %lldMB, print_stats: %d\n",
 		data_dir.c_str(), options_file.c_str(), cache_size / 1000000, print_stats);
 	if (options_file == "") {
 		throw std::invalid_argument("you really want to specify an options file!");

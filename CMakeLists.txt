@@ -8,6 +8,45 @@ include_directories(${YAML_CPP_INCLUDE_DIR})
 # Debug mode
 # set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -rdynamic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+
+# Enable all warnings and safety flags
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(
+        -Wall
+        -Wextra
+        -Wpedantic
+        # -Wshadow
+        # -Wnon-virtual-dtor
+        # -Wold-style-cast
+        -Wcast-align
+        -Wunused
+        -Woverloaded-virtual
+        -Wconversion
+        -Wsign-conversion
+        -Wnull-dereference
+        -Wdouble-promotion
+        -Wformat=2
+        -Wimplicit-fallthrough
+        -Wmisleading-indentation
+        -Wduplicated-cond
+        -Wduplicated-branches
+        -Wlogical-op
+        -Wuseless-cast
+        -Wno-reorder
+    )
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(
+        /W4
+        /WX
+        /permissive-
+        /sdl
+        /Zc:__cplusplus
+        /Zc:inline
+        /Zc:forScope
+        /Zc:rvalueCast
+    )
+endif()
 
 include_directories(/usr/local/include)
 include_directories(core/include)

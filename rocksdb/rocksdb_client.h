@@ -33,7 +33,7 @@ struct RocksDBFactory : public ClientFactory {
 	std::shared_ptr<rocksdb::Cache> _cache;
 
 	RocksDBFactory(std::string data_dir, std::string options_file,
-				   int cache_size, bool print_stats);
+				   long long cache_size, bool print_stats);
 	~RocksDBFactory();
 	RocksDBClient *create_client() override;
 	void destroy_client(Client *client) override;

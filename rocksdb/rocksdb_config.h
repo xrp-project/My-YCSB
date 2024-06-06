@@ -36,7 +36,7 @@ struct RocksDBConfig {
 	struct {
 		string data_dir;
 		string options_file;
-		long cache_size;
+		long long cache_size;
 		bool print_stats;
 	} rocksdb;
 
@@ -77,7 +77,7 @@ RocksDBConfig RocksDBConfig::parse_yaml(YAML::Node &root) {
 	config.rocksdb.options_file = "";
 	if (rocksdb["options_file"])
 		config.rocksdb.options_file = rocksdb["options_file"].as<string>();
-	config.rocksdb.cache_size = rocksdb["cache_size"].as<long>();
+	config.rocksdb.cache_size = rocksdb["cache_size"].as<long long>();
 	config.rocksdb.print_stats = rocksdb["print_stats"].as<bool>();
 
 	return config;
