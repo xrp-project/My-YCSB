@@ -104,7 +104,7 @@ LevelDBFactory::LevelDBFactory(std::string data_dir, std::string options_file,
 	this->data_dir = data_dir;
 	this->print_stats = print_stats;
 
-	fprintf(stderr, "LevelDBFactory: data_dir: %s, options_file: %s, cache_size: %lldMB, print_stats: %d\n",
+	fprintf(stderr, "LevelDBFactory: data_dir: %s, print_stats: %d\n",
 	data_dir.c_str(), options_file.c_str(), cache_size / 1000000, print_stats);
 
 	leveldb::DB* db;

@@ -73,8 +73,8 @@ target_link_libraries(run_rocksdb /usr/local/lib/librocksdb.so pthread ${YAML_CP
 set(LevelDBClientSource leveldb/leveldb_client.cpp)
 add_executable(init_leveldb ${CoreSource} ${LevelDBClientSource} leveldb/init_leveldb.cpp)
 add_executable(run_leveldb ${CoreSource} ${LevelDBClientSource} leveldb/run_leveldb.cpp)
-target_link_libraries(init_leveldb leveldb pthread ${YAML_CPP_LIBRARIES})
-target_link_libraries(run_leveldb leveldb pthread ${YAML_CPP_LIBRARIES})
+target_link_libraries(init_leveldb leveldb snappy pthread ${YAML_CPP_LIBRARIES})
+target_link_libraries(run_leveldb leveldb snappy pthread ${YAML_CPP_LIBRARIES})
 
 set(RedisClientSource redis/redis_client.cpp)
 add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cpp)
