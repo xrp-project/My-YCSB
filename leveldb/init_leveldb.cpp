@@ -13,7 +13,8 @@ int main(int argc, char *argv[]) {
 
     LevelDBFactory factory(config.leveldb.data_dir, config.leveldb.options_file,
                            config.leveldb.cache_size,
-                           config.leveldb.print_stats);
+                           config.leveldb.print_stats,
+                           config.workload.nr_thread);
 
     run_init_workload_with_op_measurement(
         "Initialization", &factory, config.database.nr_entry,

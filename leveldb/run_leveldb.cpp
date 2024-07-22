@@ -14,7 +14,8 @@ int main(int argc, char *argv[]) {
 
     LevelDBFactory factory(config.leveldb.data_dir, config.leveldb.options_file,
                            config.leveldb.cache_size,
-                           config.leveldb.print_stats);
+                           config.leveldb.print_stats,
+						   config.workload.nr_thread);
 	sleep(5);
 	OpProportion op_prop;
 	op_prop.op[READ] = config.workload.operation_proportion.read;

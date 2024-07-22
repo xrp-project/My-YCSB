@@ -5,11 +5,15 @@
 
 #include "client.h"
 #include "leveldb/db.h"
+#include "threadpool.h"
 
 struct LevelDBFactory;
 
 struct LevelDBClient : public Client {
 	leveldb::DB *db;
+
+	// Private fields
+	std::shared_ptr<ThreadPool> scan_thread_pool_;
 
 	LevelDBClient(LevelDBFactory *factory, int id);
 	~LevelDBClient();
@@ -32,10 +36,11 @@ struct LevelDBFactory : public ClientFactory {
 	bool print_stats;
 
 	// Private fields
-	std::shared_ptr<leveldb::Cache> _cache;
+	std::shared_ptr<ThreadPool> scan_thread_pool_;
 
 	LevelDBFactory(std::string data_dir, std::string options_file,
-				   long long cache_size, bool print_stats);
+				   long long cache_size, bool print_stats,
+				   int nr_thread);
 	~LevelDBFactory();
 	LevelDBClient *create_client() override;
 	void destroy_client(Client *client) override;

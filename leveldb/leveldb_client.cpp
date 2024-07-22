@@ -1,3 +1,4 @@
+#include <memory>
 #include <string>
 #include <iostream>
 #include <atomic>
@@ -31,7 +32,9 @@ repeat:
 		ret = this->do_read(op->key_buffer, &op->value_buffer);
 		break;
 	case SCAN:
-		ret = this->do_scan(op->key_buffer, op->scan_length);
+		ret = this->scan_thread_pool_->enqueue([&] {
+			return this->do_scan(op->key_buffer, op->scan_length);
+		}).get();
 		break;
 	case READ_MODIFY_WRITE:
 		ret = this->do_read_modify_write(op->key_buffer, op->value_buffer);
@@ -91,8 +94,35 @@ int LevelDBClient::do_read_modify_write(char *key_buffer, char *value_buffer) {
 }
 
 int LevelDBClient::do_scan(char *key_buffer, long scan_length) {
-	// Unimplemented
-	throw std::invalid_argument("scan not implemented for leveldb");
+	leveldb::Status status;
+	leveldb::ReadOptions read_options = leveldb::ReadOptions();
+	leveldb::Iterator* it = this->db->NewIterator(read_options);
+
+	// Seek to the starting key
+	it->Seek(key_buffer);
+
+	// Perform the scan
+	long count = 0;
+	for (; it->Valid() && count < scan_length; it->Next()) {
+		// Get the key and value
+		leveldb::Slice key = it->key();
+		leveldb::Slice value = it->value();
+
+		// Process the key-value pair
+		// ...
+
+		count++;
+	}
+
+	// Check for errors or end of scan
+	if (!it->status().ok()) {
+		fprintf(stderr, "LevelDBClient: scan failed, ret: %s\n", it->status().ToString().c_str());
+		delete it;
+		return -1;
+	}
+
+	delete it;
+	return 0;
 }
 
 int LevelDBClient::reset() {return 0;}
@@ -100,12 +130,15 @@ int LevelDBClient::reset() {return 0;}
 void LevelDBClient::close() {}
 
 LevelDBFactory::LevelDBFactory(std::string data_dir, std::string options_file,
-							   long long cache_size, bool print_stats): client_id(0) {
+							   long long cache_size, bool print_stats,
+							   int nr_thread): client_id(0) {
 	this->data_dir = data_dir;
 	this->print_stats = print_stats;
+	this->scan_thread_pool_ = std::make_shared<ThreadPool>(nr_thread);
+	this->scan_thread_pool_->fill_bpf_map_with_pids("/sys/fs/bpf/cache_ext/scan_pids");
 
 	fprintf(stderr, "LevelDBFactory: data_dir: %s, print_stats: %d\n",
-	data_dir.c_str(), options_file.c_str(), cache_size / 1000000, print_stats);
+		data_dir.c_str(), print_stats);
 
 	leveldb::DB* db;
 	leveldb::Status status;
@@ -146,7 +179,9 @@ void LevelDBFactory::reset_stats() {
 }
 
 LevelDBClient * LevelDBFactory::create_client() {
-	return new LevelDBClient(this, this->client_id++);
+	auto client = new LevelDBClient(this, this->client_id++);
+	client->scan_thread_pool_ = this->scan_thread_pool_;
+	return client;
 }
 
 void LevelDBFactory::destroy_client(Client *client) {
