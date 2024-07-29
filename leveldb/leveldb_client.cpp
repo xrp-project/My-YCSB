@@ -94,12 +94,32 @@ int LevelDBClient::do_read_modify_write(char *key_buffer, char *value_buffer) {
 }
 
 int LevelDBClient::do_scan(char *key_buffer, long scan_length) {
-	leveldb::Status status;
+
+	if (key_buffer == nullptr) {
+		fprintf(stderr, "LevelDBClient: scan failed, key_buffer is null\n");
+		return -1;
+	}
+
+	// fprintf(stderr, "SCAN: Start\n");
 	leveldb::ReadOptions read_options = leveldb::ReadOptions();
 	leveldb::Iterator* it = this->db->NewIterator(read_options);
+	// fprintf(stderr, "SCAN: Iterator created\n");
+
+
+	if (it == nullptr) {
+		fprintf(stderr, "LevelDBClient: scan failed, unable to create iterator\n");
+		return -1;
+	}
 
 	// Seek to the starting key
 	it->Seek(key_buffer);
+	if (!it->status().ok()) {
+		fprintf(stderr, "LevelDBClient: seek for scan failed, ret: %s\n", it->status().ToString().c_str());
+		delete it;
+		return -1;
+	}
+
+	// fprintf(stderr, "SCAN: Seeked to key\n");
 
 	// Perform the scan
 	long count = 0;
@@ -114,11 +134,18 @@ int LevelDBClient::do_scan(char *key_buffer, long scan_length) {
 		count++;
 	}
 
+	// fprintf(stderr, "SCAN: Done\n");
+
 	// Check for errors or end of scan
 	if (!it->status().ok()) {
 		fprintf(stderr, "LevelDBClient: scan failed, ret: %s\n", it->status().ToString().c_str());
 		delete it;
 		return -1;
+	}
+
+	if (count < scan_length) {
+		fprintf(stderr, "LevelDB: scan ended prematurely, %ld instead of %ld\n",
+			count, scan_length);
 	}
 
 	delete it;
@@ -135,7 +162,12 @@ LevelDBFactory::LevelDBFactory(std::string data_dir, std::string options_file,
 	this->data_dir = data_dir;
 	this->print_stats = print_stats;
 	this->scan_thread_pool_ = std::make_shared<ThreadPool>(nr_thread);
-	this->scan_thread_pool_->fill_bpf_map_with_pids("/sys/fs/bpf/cache_ext/scan_pids");
+	// If the ENABLE_BPF_SCAN_MAP environment variable exists, fill the map
+	char *enable_bpf_scan_map_env = getenv("ENABLE_BPF_SCAN_MAP");
+	if (enable_bpf_scan_map_env != nullptr) {
+		fprintf(stderr, "Got ENABLE_BPF_SCAN_MAP=%s\n", enable_bpf_scan_map_env);
+		this->scan_thread_pool_->fill_bpf_map_with_pids("/sys/fs/bpf/cache_ext/scan_pids");
+	}
 
 	fprintf(stderr, "LevelDBFactory: data_dir: %s, print_stats: %d\n",
 		data_dir.c_str(), print_stats);

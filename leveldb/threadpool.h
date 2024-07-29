@@ -37,7 +37,11 @@ class ThreadPool {
                 if (ret < 0) {
                     throw std::runtime_error("Failed to get thread ID");
                 }
-                thread_pids.push_back(ret);
+                {
+                    std::unique_lock<std::mutex> lock(this->queue_mutex);
+                    thread_pids.push_back(ret);
+                }
+
                 for (;;) {
                     std::function<void()> task;
 

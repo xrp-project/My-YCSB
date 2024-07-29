@@ -104,18 +104,18 @@ void ZipfianWorkload::next_op(Operation *op) {
 	double op_random = this->generate_random_double(&this->seed);
 	int op_random_int = (int) (op_random * 100) % 101;
 	int running_sum = 0;
-	if (running_sum += int(this->op_prop.op[UPDATE] * 100), op_random_int <= running_sum) {
+	if (running_sum += int(this->op_prop.op[UPDATE] * 100), this->op_prop.op[UPDATE] != 0 && op_random_int <= running_sum) {
 		op->type = UPDATE;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += int(this->op_prop.op[INSERT] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[INSERT] * 100), this->op_prop.op[INSERT] != 0 && op_random_int <= running_sum) {
 		op->type = INSERT;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += int(this->op_prop.op[READ] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ] * 100), this->op_prop.op[READ] != 0 && op_random_int <= running_sum) {
 		op->type = READ;
-	} else if (running_sum += int(this->op_prop.op[SCAN] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[SCAN] * 100), this->op_prop.op[SCAN] != 0 && op_random_int <= running_sum) {
 		op->type = SCAN;
 		op->scan_length = this->scan_length;
-	} else if (running_sum += int(this->op_prop.op[READ_MODIFY_WRITE] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ_MODIFY_WRITE] * 100), this->op_prop.op[READ_MODIFY_WRITE] != 0 && op_random_int <= running_sum) {
 		op->type = READ_MODIFY_WRITE;
 		this->generate_value_string(op->value_buffer);
 	} else {
