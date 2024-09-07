@@ -124,6 +124,10 @@ void ZipfianWorkload::next_op(Operation *op) {
 		throw std::invalid_argument("failed to generate an operation");
 	}
 	unsigned long key = this->generate_zipfian_random_ulong(true) % ((unsigned long) this->nr_entry);
+	// If record_keys is set to true, record op's key
+	if (this->record_keys) {
+		this->recorded_keys.push_back(key);
+	}
 	this->generate_key_string(op->key_buffer, key);
 	++this->cur_nr_op;
 	op->is_last_op = !this->has_next_op();
@@ -139,6 +143,7 @@ ZipfianWorkload * ZipfianWorkload::clone(unsigned int new_seed) {
 	copy->alpha = this->alpha;
 	copy->eta = this->eta;
 	copy->nr_entry = this->nr_entry;
+	copy->record_keys = this->record_keys;
 	return copy;
 }
 

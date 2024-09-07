@@ -103,6 +103,7 @@ class ThreadPool {
         clear_bpf_map(map_fd);
         for (pid_t pid : thread_pids) {
             int key = pid;
+            fprintf(stderr, "Got thread ID: (key=%d, pid=%d)\n", key, pid);
             int value = 1;
             int ret = bpf_map_update_elem(map_fd, &key, &value, BPF_ANY);
             if (ret < 0) {

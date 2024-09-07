@@ -43,6 +43,8 @@ struct OpProportion {
 struct Workload {
 	long key_size;
 	long value_size;
+	bool record_keys = false;
+	std::vector<unsigned long> recorded_keys;
 
 	Workload(long key_size, long value_size);
 	virtual void next_op(Operation *op) = 0;
