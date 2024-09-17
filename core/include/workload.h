@@ -86,6 +86,8 @@ struct ZipfianWorkload : public Workload {
 	long scan_length;
 	struct OpProportion op_prop;
 	double zipfian_constant;
+	int scan_worker_count;
+	bool do_only_scans = false;
 
 	/* constants */
 	static constexpr int key_format_len = 64;

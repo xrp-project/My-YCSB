@@ -32,9 +32,10 @@ repeat:
 		ret = this->do_read(op->key_buffer, &op->value_buffer);
 		break;
 	case SCAN:
-		ret = this->scan_thread_pool_->enqueue([&] {
-			return this->do_scan(op->key_buffer, op->scan_length);
-		}).get();
+		// ret = this->scan_thread_pool_->enqueue([&] {
+		// 	return this->do_scan(op->key_buffer, op->scan_length);
+		// }).get();
+		ret = this->do_scan(op->key_buffer, op->scan_length);
 		break;
 	case READ_MODIFY_WRITE:
 		ret = this->do_read_modify_write(op->key_buffer, op->value_buffer);
@@ -161,13 +162,9 @@ LevelDBFactory::LevelDBFactory(std::string data_dir, std::string options_file,
 							   int nr_thread): client_id(0) {
 	this->data_dir = data_dir;
 	this->print_stats = print_stats;
-	this->scan_thread_pool_ = std::make_shared<ThreadPool>(nr_thread);
+	// this->scan_thread_pool_ = std::make_shared<ThreadPool>(nr_thread);
 	// If the ENABLE_BPF_SCAN_MAP environment variable exists, fill the map
-	char *enable_bpf_scan_map_env = getenv("ENABLE_BPF_SCAN_MAP");
-	if (enable_bpf_scan_map_env != nullptr) {
-		fprintf(stderr, "Got ENABLE_BPF_SCAN_MAP=%s\n", enable_bpf_scan_map_env);
-		this->scan_thread_pool_->fill_bpf_map_with_pids("/sys/fs/bpf/cache_ext/scan_pids");
-	}
+
 
 	fprintf(stderr, "LevelDBFactory: data_dir: %s, print_stats: %d\n",
 		data_dir.c_str(), print_stats);
@@ -212,7 +209,7 @@ void LevelDBFactory::reset_stats() {
 
 LevelDBClient * LevelDBFactory::create_client() {
 	auto client = new LevelDBClient(this, this->client_id++);
-	client->scan_thread_pool_ = this->scan_thread_pool_;
+	// client->scan_thread_pool_ = this->scan_thread_pool_;
 	return client;
 }
 

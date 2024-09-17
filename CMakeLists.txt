@@ -14,6 +14,9 @@ link_directories(/usr/local/lib64)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -rdynamic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
+# Export compile_commands.json for clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Enable all warnings and safety flags
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(
@@ -79,6 +82,7 @@ add_executable(init_leveldb ${CoreSource} ${LevelDBClientSource} leveldb/init_le
 add_executable(run_leveldb ${CoreSource} ${LevelDBClientSource} leveldb/run_leveldb.cpp)
 target_link_libraries(init_leveldb leveldb snappy pthread bpf ${YAML_CPP_LIBRARIES})
 target_link_libraries(run_leveldb leveldb snappy pthread bpf ${YAML_CPP_LIBRARIES})
+
 
 set(RedisClientSource redis/redis_client.cpp)
 add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cpp)

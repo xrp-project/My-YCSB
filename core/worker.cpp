@@ -9,6 +9,12 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 	std::chrono::steady_clock::time_point start_time, finish_time;
 	std::chrono::steady_clock::time_point next_op_time = std::chrono::steady_clock::now();
 
+	// If the workload has scans:
+	// - Check the scan_worker_count field in the workload object.
+	// - If it's zero, do nothing.
+	// - If it's greater than zero, check the worker's id number. If it's less
+	//   than the scan_worker_count, the worker should perform only scans.
+
 	measurement->start_measure();
 	while (workload->has_next_op()) {
 		// Finish earlier if runtime expires
@@ -158,12 +164,18 @@ void run_uniform_workload_with_op_measurement(const char *task, ClientFactory *f
 void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
                                               long scan_length, int nr_thread, struct OpProportion op_prop, double zipfian_constant, long nr_op,
 											  long runtime_seconds, long next_op_interval_ns, const char *latency_file) {
+	int scan_worker_count = 1;
 	ZipfianWorkload **workload_arr = new ZipfianWorkload *[nr_thread];
 	printf("ZipfianWorkload: start initializing zipfian variables, might take a while\n");
 	ZipfianWorkload base_workload(key_size, value_size, scan_length, nr_entry, nr_op, op_prop, zipfian_constant, 0);
 	base_workload.record_keys = true;
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		workload_arr[thread_index] = base_workload.clone(thread_index);
+		if (scan_worker_count > 0 && thread_index < scan_worker_count) {
+			workload_arr[thread_index]->do_only_scans = true;
+		} else {
+			workload_arr[thread_index]->do_only_scans = false;
+		}
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, runtime_seconds, nr_thread * nr_op, next_op_interval_ns, latency_file);

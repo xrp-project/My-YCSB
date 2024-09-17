@@ -21,7 +21,7 @@ workload:
     read_modify_write: 0
   request_distribution: "zipfian"
   # for zipfian distribution
-  zipfian_constant: 0.999999
+  zipfian_constant: 0.99
   # for trace workload
   trace_file_list:
     - "./cur_trace"
