@@ -83,6 +83,11 @@ add_executable(run_leveldb ${CoreSource} ${LevelDBClientSource} leveldb/run_leve
 target_link_libraries(init_leveldb leveldb snappy pthread bpf ${YAML_CPP_LIBRARIES})
 target_link_libraries(run_leveldb leveldb snappy pthread bpf ${YAML_CPP_LIBRARIES})
 
+# Add the same for IOTrace
+set(IOTraceClientSource io_trace/io_trace_client.cpp io_trace/constants.cpp)
+add_executable(run_io_trace ${CoreSource} ${IOTraceClientSource} io_trace/run_io_trace.cpp)
+target_link_libraries(run_io_trace bpf ${YAML_CPP_LIBRARIES})
+
 
 set(RedisClientSource redis/redis_client.cpp)
 add_executable(init_redis ${CoreSource} ${RedisClientSource} redis/init_redis.cpp)

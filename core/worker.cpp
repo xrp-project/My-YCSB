@@ -180,24 +180,24 @@ void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *f
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, runtime_seconds, nr_thread * nr_op, next_op_interval_ns, latency_file);
 
-	// If record_keys is set, dump all keys into a file.
-	// Format as a json array of numbers.
-	if (base_workload.record_keys) {
-		std::ofstream key_file("workload_keys.json");
-		key_file << "[";
-                for (int i = 0; i < nr_thread; i++) {
-					auto &workload = workload_arr[i];
-                    for (auto it = workload->recorded_keys.begin();
-                         it != workload->recorded_keys.end(); ++it) {
-                        key_file << *it;
-                        if (std::next(it) != workload->recorded_keys.end()) {
-                            key_file << ",";
-                        }
-                    }
-                }
-                key_file << "]";
-		key_file.close();
-	}
+	// // If record_keys is set, dump all keys into a file.
+	// // Format as a json array of numbers.
+	// if (base_workload.record_keys) {
+	// 	std::ofstream key_file("workload_keys.json");
+	// 	key_file << "[";
+    //             for (int i = 0; i < nr_thread; i++) {
+	// 				auto &workload = workload_arr[i];
+    //                 for (auto it = workload->recorded_keys.begin();
+    //                      it != workload->recorded_keys.end(); ++it) {
+    //                     key_file << *it;
+    //                     if (std::next(it) != workload->recorded_keys.end()) {
+    //                         key_file << ",";
+    //                     }
+    //                 }
+    //             }
+    //             key_file << "]";
+	// 	key_file.close();
+	// }
 
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		delete workload_arr[thread_index];
@@ -224,15 +224,16 @@ void run_latest_workload_with_op_measurement(const char *task, ClientFactory *fa
 }
 
 void run_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size,
-                                            int nr_thread, std::list<std::string> trace_file_list, long nr_op, long runtime_seconds,
+                                            int nr_thread, std::string trace_file, long nr_op, long runtime_seconds,
 											long next_op_interval_ns, const char *latency_file) {
-	if (trace_file_list.size() < nr_thread)
-		throw std::invalid_argument("insufficient trace files");
 	TraceWorkload **workload_arr = new TraceWorkload *[nr_thread];
-	std::list<std::string>::iterator trace_file_iter = trace_file_list.begin();
+	// Create a new TraceWorkload object shared by all threads. Use new operator
+	// to allocate memory for the object.
+	std::shared_ptr<TraceIterator> trace_iter = std::make_shared<TraceIterator>(trace_file);
 	printf("TraceWorkload: start loading trace files, might take a while\n");
-	for (int thread_index = 0; thread_index < nr_thread; ++thread_index, ++trace_file_iter) {
-		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, *trace_file_iter, thread_index);
+	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
+		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, "", thread_index);
+		workload_arr[thread_index]->trace_iterator = trace_iter;
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, runtime_seconds, nr_thread * nr_op, next_op_interval_ns, latency_file);

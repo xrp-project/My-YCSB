@@ -392,48 +392,16 @@ TraceWorkload::TraceWorkload(long key_size, long value_size, long nr_op, std::st
 }
 
 bool TraceWorkload::has_next_op() {
-	return this->cur_nr_op < this->nr_op;
+	// TODO: Fix this
+	return true;
 }
 
 void TraceWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 
-	std::string line = this->line_list.front();
-	this->line_list.pop_front();
-
-	/* trace file format:
-	 * [UPDATE/READ/READ_MODIFY_WRITE],[key string]
-	 * SCAN,[start key string],[scan length]
-	 */
-	std::stringstream line_stream(line);
-	std::string op_type, key;
-	if (!std::getline(line_stream, op_type, ','))
-		throw std::invalid_argument("failed to get the op type");
-	if (!std::getline(line_stream, key, ','))
-		throw std::invalid_argument("failed to get the key");
-
-	if (op_type == "UPDATE") {
-		op->type = UPDATE;
-		this->generate_value_string(op->value_buffer);
-	} else if (op_type == "INSERT") {
-		op->type = INSERT;
-		this->generate_value_string(op->value_buffer);
-	} else if (op_type == "READ") {
-		op->type = READ;
-	} else if (op_type == "SCAN") {
-		std::string scan_length;
-		if (!std::getline(line_stream, scan_length, ','))
-			throw std::invalid_argument("failed to get the scan length");
-		op->type = SCAN;
-		op->scan_length = std::stol(scan_length, nullptr, 10);
-	} else if (op_type == "READ_MODIFY_WRITE") {
-		op->type = READ_MODIFY_WRITE;
-		this->generate_value_string(op->value_buffer);
-	} else {
-		throw std::invalid_argument("invalid trace operation");
-	}
-	strcpy(op->key_buffer, key.c_str());
+	// Just call the iterator, wrapped in the shared_ptr
+	this->trace_iterator.get()->next_op(op);
 	++this->cur_nr_op;
 	op->is_last_op = !this->has_next_op();
 }
