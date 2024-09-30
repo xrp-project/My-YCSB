@@ -103,6 +103,13 @@ int LevelDBClient::do_scan(char *key_buffer, long scan_length) {
 
 	// fprintf(stderr, "SCAN: Start\n");
 	leveldb::ReadOptions read_options = leveldb::ReadOptions();
+	// If running in cache_ext mode, don't set the is_scan flag
+	// Read the ENABLE_BPF_SCAN_MAP environment variable
+	if (getenv("ENABLE_SCAN_FADVISE") != nullptr) {
+		read_options.is_scan = true;
+	} else {
+		read_options.is_scan = false;
+	}
 	leveldb::Iterator* it = this->db->NewIterator(read_options);
 	// fprintf(stderr, "SCAN: Iterator created\n");
 

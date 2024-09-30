@@ -4,12 +4,25 @@
 #include "io_trace_client.h"
 #include "io_trace_config.h"
 #include "constants.h"
+#include <sys/resource.h>
+
+void ulimit(int n) {
+	struct rlimit limit;
+	limit.rlim_cur = n;
+	limit.rlim_max = n;
+	if (setrlimit(RLIMIT_NOFILE, &limit) != 0) {
+		perror("setrlimit");
+		exit(1);
+	}
+}
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		printf("Usage: %s <config file>\n", argv[0]);
 		return -EINVAL;
 	}
+	initialize_random_buffer();
+	ulimit(1000000);
 	YAML::Node file = YAML::LoadFile(argv[1]);
 	IOTraceConfig config = IOTraceConfig::parse_yaml(file);
 

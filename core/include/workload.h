@@ -183,11 +183,13 @@ struct TraceIterator {
 			throw std::invalid_argument("Failed to open trace file: " + trace_path);
 		}
 		std::string line;
-		while (std::getline(trace_file, line
-		)) {
+		while (std::getline(trace_file, line)) {
 			line_list.push_back(line);
 		}
 		line_iterator = line_list.begin();
+
+		// Print the trace file and number of lines
+		fprintf(stderr, "Number of lines in trace file: %zu\n", line_list.size());
 	}
 
 	bool next_op(Operation *op) {

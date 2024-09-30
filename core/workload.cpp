@@ -379,16 +379,7 @@ void LatestWorkload::generate_value_string(char *value_buffer) {
 
 TraceWorkload::TraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed)
 : Workload(key_size, value_size), nr_op(nr_op), trace_path(trace_path), cur_nr_op(0), seed(seed) {
-	this->trace_file.open(this->trace_path);
-	if (!this->trace_file.is_open())
-		throw std::invalid_argument("unable to open trace file");
-	for (long i = 0; i < nr_op; ++i) {
-		std::string line;
-		if (!std::getline(this->trace_file, line))
-			throw std::invalid_argument("failed to get the next line from the trace file");
-		this->line_list.push_back(line);
-	}
-	this->trace_file.close();
+	// no-op
 }
 
 bool TraceWorkload::has_next_op() {

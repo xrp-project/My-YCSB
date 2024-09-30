@@ -3,6 +3,8 @@
 
 void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measurement, long next_op_interval_ns) {
 	Operation op;
+	// Print key and value sizes
+	fprintf(stderr, "Key size: %ld, Value size: %ld\n", workload->key_size, workload->value_size);
 	op.key_buffer = new char[workload->key_size];
 	op.value_buffer = new char[workload->value_size];
 	op.value_buffer_size = workload->value_size;
@@ -171,7 +173,7 @@ void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *f
 	base_workload.record_keys = true;
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		workload_arr[thread_index] = base_workload.clone(thread_index);
-		if (scan_worker_count > 0 && thread_index < scan_worker_count) {
+		if (scan_worker_count > 0 && thread_index < scan_worker_count && op_prop.op[SCAN] > 0) {
 			workload_arr[thread_index]->do_only_scans = true;
 		} else {
 			workload_arr[thread_index]->do_only_scans = false;
@@ -230,9 +232,9 @@ void run_trace_workload_with_op_measurement(const char *task, ClientFactory *fac
 	// Create a new TraceWorkload object shared by all threads. Use new operator
 	// to allocate memory for the object.
 	std::shared_ptr<TraceIterator> trace_iter = std::make_shared<TraceIterator>(trace_file);
-	printf("TraceWorkload: start loading trace files, might take a while\n");
+	fprintf(stderr, "TraceWorkload: start loading trace files, might take a while\n");
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
-		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, "", thread_index);
+		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, trace_file, thread_index);
 		workload_arr[thread_index]->trace_iterator = trace_iter;
 	}
 

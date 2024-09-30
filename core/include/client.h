@@ -9,7 +9,6 @@ struct ClientFactory;
 
 struct Client {
 	int id;
-	int num_scan_workers = 1;
 	ClientFactory *factory;
 
 	Client(int id, ClientFactory *factory);

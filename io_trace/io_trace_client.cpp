@@ -5,12 +5,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <unordered_map>
+#include <stdio.h>
 
 #include "io_trace_client.h"
 #include "constants.h"
-
-
-int MAX_BUFFER_SIZE = 32 * MiB;
 
 
 IOTraceClient::IOTraceClient(IOTraceFactory *factory, int id, std::string data_dir)
@@ -41,6 +39,7 @@ public:
 			int fd = open(filename.c_str(), O_RDWR);
 			if (fd < 0) {
 				std::cerr << "Failed to open file: " << filename << std::endl;
+				perror("open");
 				return -1;
 			}
 			file_descriptor_map[filename] = fd;
@@ -119,7 +118,7 @@ struct file_and_offset_and_size get_file_and_offset_and_size_from_key(char *key_
 
 	// Sanity check
 	if (size > MAX_VALUE_SIZE) {
-		throw std::invalid_argument("Size too large: " + std::to_string(size));
+		throw std::invalid_argument("Size too large: " + std::to_string(size) + ", MAX_VALUE_SIZE: " + std::to_string(MAX_VALUE_SIZE));
 	}
 
 	return {filename, offset, size};
@@ -132,6 +131,7 @@ repeat:
 	case UPDATE:
 		throw std::invalid_argument("update not supported");
 	case INSERT:
+		// Print value size
 		ret = this->do_insert(op->key_buffer, op->value_buffer);
 		break;
 	case READ:
@@ -153,9 +153,14 @@ repeat:
 
 int IOTraceClient::do_read(char *key_buffer, char *value) {
 	struct file_and_offset_and_size fos = get_file_and_offset_and_size_from_key(key_buffer);
+	// Log the operation, file, and offset
+	// fprintf(stderr, "Operation: READ, File: %s, Offset: %ld, Size: %ld\n", fos.file.c_str(), fos.offset, fos.size);
 	// Join data_dir and file
 	std::string file_path = this->data_dir + "/" + fos.file;
 	int fd = file_descriptor_cache.get_file_descriptor(file_path);
+	if (fd < 0) {
+		return -1;
+	}
 	// Read value from file
 	int ret = pread(fd, value, fos.size, fos.offset);
 	if (ret < 0) {
@@ -165,21 +170,33 @@ int IOTraceClient::do_read(char *key_buffer, char *value) {
 	return 0;
 }
 
-void generate_random_string(char *buffer, int size) {
-    static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const size_t charset_size = sizeof(charset) - 1;
+// thread_local unsigned int seed = 42;
+// thread_local char value_buffer[MAX_VALUE_SIZE];
+//
+// void generate_random_string(char *buffer, int size) {
+// 	if (size >= MAX_VALUE_SIZE) {
+// 		throw std::invalid_argument("Size too large: " + std::to_string(size) + ", MAX_VALUE_SIZE: " + std::to_string(MAX_VALUE_SIZE));;
+// 	}
+//     static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//     const size_t charset_size = sizeof(charset) - 1;
 
-    for (int i = 0; i < size; ++i) {
-        buffer[i] = charset[rand() % charset_size];
-    }
-    buffer[size - 1] = '\0';  // Ensure null-termination
-}
+//     for (int i = 0; i < size; ++i) {
+//         buffer[i] = charset[rand_r(&seed) % charset_size];
+//     }
+// 	buffer[std::max(0, size - 1)] = '\0';  // Ensure null-termination
+// }
 
 int IOTraceClient::do_insert(char *key_buffer, char *value_buffer) {
 	struct file_and_offset_and_size fos = get_file_and_offset_and_size_from_key(key_buffer);
+	// Log the operation, file, and offset
+	// fprintf(stderr, "Operation: INSERT, File: %s, Offset: %ld, Size: %ld\n", fos.file.c_str(), fos.offset, fos.size);
+
 	// Join data_dir and file
 	std::string file_path = this->data_dir + "/" + fos.file;
 	int fd = file_descriptor_cache.get_file_descriptor(file_path);
+	if (fd < 0) {
+		return -1;
+	}
 	generate_random_string(value_buffer, fos.size);
 	// Write value to file
 	int ret = pwrite(fd, value_buffer, fos.size, fos.offset);
