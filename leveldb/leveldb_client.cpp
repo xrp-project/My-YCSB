@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <atomic>
+#include <fcntl.h>
 
 #include "leveldb/db.h"
 #include "leveldb/options.h"
@@ -105,8 +106,21 @@ int LevelDBClient::do_scan(char *key_buffer, long scan_length) {
 	leveldb::ReadOptions read_options = leveldb::ReadOptions();
 	// If running in cache_ext mode, don't set the is_scan flag
 	// Read the ENABLE_BPF_SCAN_MAP environment variable
-	if (getenv("ENABLE_SCAN_FADVISE") != nullptr) {
+	char* fadvise_hint_str = getenv("ENABLE_SCAN_FADVISE");
+	int fadvise_hint;
+	if (fadvise_hint_str != nullptr) {
 		read_options.is_scan = true;
+		if (strcmp(fadvise_hint_str, "NOREUSE") == 0) {
+			fadvise_hint = POSIX_FADV_NOREUSE;
+		} else if (strcmp(fadvise_hint_str, "SEQUENTIAL") == 0) {
+			fadvise_hint = POSIX_FADV_SEQUENTIAL;
+		} else if (strcmp(fadvise_hint_str, "DONTNEED") == 0) {
+			fadvise_hint = POSIX_FADV_DONTNEED;
+		} else {
+			fprintf(stderr, "LevelDBClient: scan failed, invalid fadvise hint: %s\n",
+				fadvise_hint_str);
+			return -1;
+		}
 	} else {
 		read_options.is_scan = false;
 	}

@@ -1,13 +1,13 @@
 workload:
   nr_warmup_op: 1000000000
   nr_op: 1000000000
-  warmup_runtime_seconds: 120
-  runtime_seconds: 60
-  nr_thread: 8
+  warmup_runtime_seconds: 60
+  runtime_seconds: 180
+  nr_thread: 7
   next_op_interval_ns: 0
-  trace_file: "/mydata/linux/linux/testing/page_cache_ext/google_traces/trace_cluster1_16TB_20240115_data-00000-of-00100.txt"
+  trace_file: "/mydata/linux/linux/testing/page_cache_ext/google_traces/trace_cluster1_16TB_20240115_data-00052-of-00100.txt"
   request_distribution: "trace"
 
 io_trace:
-  data_dir: "google_traces/data_cluster1_16TB_20240115_data-00000-of-00100_temp"
+  data_dir: "google_traces/data_cluster1_16TB_20240115_data-00052-of-00100_temp"
   print_stats: true
