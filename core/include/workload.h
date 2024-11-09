@@ -201,6 +201,7 @@ struct TraceIterator {
 		{
 			std::lock_guard<std::mutex> guard(lock);
 			if (line_iterator == line_list.end()) {
+				fprintf(stderr, "End of trace file\n");
 				return false;
 			}
 			line = *line_iterator;
@@ -240,12 +241,11 @@ struct TraceWorkload : public Workload {
 	/* configuration */
 	long nr_op;
 	std::string trace_path; // unused now
-	std::shared_ptr<TraceIterator> trace_iterator;
+	TraceIterator* trace_iterator;
 
 	/* states */
 	unsigned int seed;
 	long cur_nr_op;
-	std::ifstream trace_file;
 	std::list<std::string> line_list;
 
 	TraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed);

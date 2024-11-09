@@ -27,6 +27,7 @@ public:
 	FileDescriptorCache() {}
 	~FileDescriptorCache() {
 		// Close all file descriptors
+		std::lock_guard<std::mutex> guard(lock);
 		for (auto &it : file_descriptor_map) {
 			close(it.second);
 		}

@@ -225,13 +225,21 @@ void run_latest_workload_with_op_measurement(const char *task, ClientFactory *fa
 	delete[] workload_arr;
 }
 
+TraceIterator *global_trace_iter = nullptr;
+
 void run_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size,
                                             int nr_thread, std::string trace_file, long nr_op, long runtime_seconds,
 											long next_op_interval_ns, const char *latency_file) {
 	TraceWorkload **workload_arr = new TraceWorkload *[nr_thread];
 	// Create a new TraceWorkload object shared by all threads. Use new operator
 	// to allocate memory for the object.
-	std::shared_ptr<TraceIterator> trace_iter = std::make_shared<TraceIterator>(trace_file);
+	TraceIterator *trace_iter = nullptr;
+	if (global_trace_iter == nullptr) {
+		trace_iter = new TraceIterator(trace_file);
+		global_trace_iter = trace_iter;
+	} else {
+		trace_iter = global_trace_iter;
+	}
 	fprintf(stderr, "TraceWorkload: start loading trace files, might take a while\n");
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, trace_file, thread_index);

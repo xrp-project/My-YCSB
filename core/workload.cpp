@@ -392,7 +392,10 @@ void TraceWorkload::next_op(Operation *op) {
 		throw std::invalid_argument("does not have next op");
 
 	// Just call the iterator, wrapped in the shared_ptr
-	this->trace_iterator.get()->next_op(op);
+	bool has_next_op = this->trace_iterator->next_op(op);
+	if (!has_next_op) {
+		throw std::invalid_argument("does not have next op (2)");
+	}
 	++this->cur_nr_op;
 	op->is_last_op = !this->has_next_op();
 }
