@@ -194,6 +194,8 @@ LevelDBFactory::LevelDBFactory(std::string data_dir, std::string options_file,
 	leveldb::Status status;
 	leveldb::Options options;
 
+	// options.write_buffer_size = 1024 * 1024 * 256;
+
 	options.create_if_missing = true;
 	status = leveldb::DB::Open(options, data_dir, &db);
 

@@ -29,6 +29,8 @@ void run_latest_workload_with_op_measurement(const char *task, ClientFactory *fa
                                              int nr_thread, double read_ratio, double zipfian_constant, long nr_op, long runtime_seconds, long next_op_interval_ns,
                                              const char *latency_file);
 void run_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size,
-                                            int nr_thread, std::string trace_file,long nr_op, long runtime_seconds, long next_op_interval_ns,
-                                            const char *latency_file);
+                                            int nr_thread, std::string trace_file, std::string trace_type, long runtime_seconds,
+                                            long next_op_interval_ns, const char *latency_file);
+
+void run_init_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size, std::string trace_file, std::string trace_type);
 #endif //YCSB_WORKER_H

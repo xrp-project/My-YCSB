@@ -147,6 +147,14 @@ void run_init_workload_with_op_measurement(const char *task, ClientFactory *fact
 	delete[] workload_arr;
 }
 
+void run_init_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size, std::string trace_file, std::string trace_type) {
+	InitTraceWorkload *workload = new InitTraceWorkload(key_size, value_size, trace_file, trace_type);
+	int64_t nr_op = workload->nr_op;
+	int nr_thread = 1;
+	run_workload_with_op_measurement(task, factory, (Workload **)&workload, nr_thread, nr_op, 0, nr_thread * nr_op, 0, nullptr);
+	delete workload;
+}
+
 void run_uniform_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
                                               long scan_length, int nr_thread, struct OpProportion op_prop, long nr_op, long runtime_seconds, long next_op_interval_ns,
                                               const char *latency_file) {
@@ -228,21 +236,22 @@ void run_latest_workload_with_op_measurement(const char *task, ClientFactory *fa
 TraceIterator *global_trace_iter = nullptr;
 
 void run_trace_workload_with_op_measurement(const char *task, ClientFactory *factory, long key_size, long value_size,
-                                            int nr_thread, std::string trace_file, long nr_op, long runtime_seconds,
+                                            int nr_thread, std::string trace_file, std::string trace_type, long runtime_seconds,
 											long next_op_interval_ns, const char *latency_file) {
 	TraceWorkload **workload_arr = new TraceWorkload *[nr_thread];
 	// Create a new TraceWorkload object shared by all threads. Use new operator
 	// to allocate memory for the object.
 	TraceIterator *trace_iter = nullptr;
 	if (global_trace_iter == nullptr) {
-		trace_iter = new TraceIterator(trace_file);
+		trace_iter = new TraceIterator(trace_file, trace_type);
 		global_trace_iter = trace_iter;
 	} else {
 		trace_iter = global_trace_iter;
 	}
+	int64_t nr_op = trace_iter->nr_op();
 	fprintf(stderr, "TraceWorkload: start loading trace files, might take a while\n");
 	for (int thread_index = 0; thread_index < nr_thread; ++thread_index) {
-		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, nr_op, trace_file, thread_index);
+		workload_arr[thread_index] = new TraceWorkload(key_size, value_size, trace_file, thread_index);
 		workload_arr[thread_index]->trace_iterator = trace_iter;
 	}
 

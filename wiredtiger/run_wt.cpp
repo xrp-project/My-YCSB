@@ -71,16 +71,17 @@ int main(int argc, char *argv[]) {
 			                                        nr_op,
 			                                        config.workload.next_op_interval_ns,
 			                                        nullptr);
-		} else if (config.workload.request_distribution == "trace") {
-			run_trace_workload_with_op_measurement(i == 0 ? "Trace (Warm-Up)" : "Trace",
-			                                       &factory,
-			                                       config.database.key_size,
-			                                       config.database.value_size,
-			                                       config.workload.nr_thread,
-			                                       config.workload.trace_file_list,
-			                                       nr_op,
-			                                       config.workload.next_op_interval_ns,
-			                                       nullptr);
+		// }
+		// else if (config.workload.request_distribution == "trace") {
+		// 	run_trace_workload_with_op_measurement(i == 0 ? "Trace (Warm-Up)" : "Trace",
+		// 	                                       &factory,
+		// 	                                       config.database.key_size,
+		// 	                                       config.database.value_size,
+		// 	                                       config.workload.nr_thread,
+		// 	                                       config.workload.trace_file_list,
+		// 	                                       nr_op,
+		// 	                                       config.workload.next_op_interval_ns,
+		// 	                                       nullptr);
 		} else {
 			throw std::invalid_argument("unrecognized workload");
 		}

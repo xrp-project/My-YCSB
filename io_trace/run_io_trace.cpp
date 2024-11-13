@@ -49,8 +49,8 @@ int main(int argc, char *argv[]) {
 			                                       MAX_VALUE_SIZE,
 			                                       config.workload.nr_thread,
 			                                       config.workload.trace_file,
-			                                       nr_op,
-												   runtime_seconds,
+			                                       "google_bench",
+			                                       runtime_seconds,
 			                                       config.workload.next_op_interval_ns,
 			                                       nullptr);
 		} else {

@@ -377,14 +377,14 @@ void LatestWorkload::generate_value_string(char *value_buffer) {
 	value_buffer[this->value_size - 1] = '\0';
 }
 
-TraceWorkload::TraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed)
-: Workload(key_size, value_size), nr_op(nr_op), trace_path(trace_path), cur_nr_op(0), seed(seed) {
+TraceWorkload::TraceWorkload(long key_size, long value_size, std::string trace_path, unsigned int seed)
+: Workload(key_size, value_size), trace_path(trace_path), seed(seed) {
 	// no-op
 }
 
 bool TraceWorkload::has_next_op() {
 	// TODO: Fix this
-	return true;
+	return this->trace_iterator->has_next_op();
 }
 
 void TraceWorkload::next_op(Operation *op) {
@@ -396,7 +396,9 @@ void TraceWorkload::next_op(Operation *op) {
 	if (!has_next_op) {
 		throw std::invalid_argument("does not have next op (2)");
 	}
-	++this->cur_nr_op;
+	if (op->type == INSERT || op->type == UPDATE) {
+		this->generate_value_string(op->value_buffer);
+	}
 	op->is_last_op = !this->has_next_op();
 }
 
@@ -405,4 +407,19 @@ void TraceWorkload::generate_value_string(char *value_buffer) {
 		value_buffer[i] = 'a' + (rand_r(&this->seed) % ('z' - 'a' + 1));
 	}
 	value_buffer[this->value_size - 1] = '\0';
+}
+
+InitTraceWorkload::InitTraceWorkload(long key_size, long value_size, std::string trace_path, std::string trace_type)
+	: TraceWorkload(key_size, value_size, trace_path, 1) {
+	fprintf(stderr, "InitTraceWorkload: trace_path=%s, trace_type=%s\n", trace_path.c_str(), trace_type.c_str());
+	this->trace_iterator = new TraceIterator(trace_path, trace_type);
+	this->nr_op = this->trace_iterator->nr_op();
+}
+
+bool InitTraceWorkload::has_next_op() {
+	return TraceWorkload::has_next_op();
+}
+
+void InitTraceWorkload::next_op(Operation *op) {
+	TraceWorkload::next_op(op);
 }
