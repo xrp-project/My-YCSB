@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
                            config.leveldb.print_stats,
                            config.workload.nr_thread);
 
-    if (config.workload.request_distribution != "trace") {
+    if (config.workload.request_distribution == "trace") {
         run_init_trace_workload_with_op_measurement(
             "Initialization (trace)", &factory, config.database.key_size,
             config.database.value_size, config.workload.trace_file,

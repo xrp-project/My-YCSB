@@ -183,27 +183,32 @@ struct TraceIterator {
 		if (trace_type != "google_bench" && trace_type != "twitter_init" && trace_type != "twitter_bench") {
 			throw std::invalid_argument("Unsupported trace type: " + trace_type);
 		}
+		// Count lines in file
+		int line_count = 0;
+		std::string line;
+		std::ifstream count_file(trace_path);
+		if (!count_file.is_open()) {
+			throw std::invalid_argument("Failed to open trace file: " + trace_path);
+		}
+		while (std::getline(count_file, line)) {
+			line_count++;
+		}
+		count_file.close();
+		this->_nr_op = line_count;
 		std::ifstream trace_file(trace_path);
 		if (!trace_file.is_open()) {
 			throw std::invalid_argument("Failed to open trace file: " + trace_path);
 		}
-		std::string line;
-		while (std::getline(trace_file, line)) {
-			line_list.push_back(line);
-		}
-		line_iterator = line_list.begin();
-
-		// Print the trace file and number of lines
-		fprintf(stderr, "Number of lines in trace file: %zu\n", line_list.size());
+		this->trace_file = std::move(trace_file);
 	}
 
 	bool has_next_op() {
 		std::lock_guard<std::mutex> guard(lock);
-		return line_iterator != line_list.end();
+		return !trace_file.eof();
 	}
 
 	int64_t nr_op() {
-		return line_list.size();
+		return this->_nr_op;
 	}
 
 	bool next_op_google_bench(Operation *op) {
@@ -214,12 +219,10 @@ struct TraceIterator {
 		std::string line;
 		{
 			std::lock_guard<std::mutex> guard(lock);
-			if (line_iterator == line_list.end()) {
+			if (!std::getline(trace_file, line)) {
 				fprintf(stderr, "End of trace file\n");
 				return false;
 			}
-			line = *line_iterator;
-			++line_iterator;
 
 			std::istringstream iss(line);
 			std::vector<std::string> tokens;
@@ -250,12 +253,10 @@ struct TraceIterator {
 		std::string line;
 		{
 			std::lock_guard<std::mutex> guard(lock);
-			if (line_iterator == line_list.end()) {
+			if (!std::getline(trace_file, line)) {
 				fprintf(stderr, "End of trace file\n");
 				return false;
 			}
-			line = *line_iterator;
-			++line_iterator;
 
 			std::istringstream iss(line);
 			std::vector<std::string> tokens;
@@ -282,12 +283,10 @@ struct TraceIterator {
 		std::string line;
 		{
 			std::lock_guard<std::mutex> guard(lock);
-			if (line_iterator == line_list.end()) {
+			if (!std::getline(trace_file, line)) {
 				fprintf(stderr, "End of trace file\n");
 				return false;
 			}
-			line = *line_iterator;
-			++line_iterator;
 
 			std::istringstream iss(line);
 			std::vector<std::string> tokens;
@@ -330,11 +329,11 @@ struct TraceIterator {
 	}
 private:
 	// line list iterator
-	std::vector<std::string>::iterator line_iterator;
-	std::vector<std::string> line_list;
+	std::ifstream trace_file;
 	std::mutex lock;
 	std::string trace_type;
 	std::string trace_path;
+	int _nr_op;
 };
 
 
@@ -347,7 +346,6 @@ struct TraceWorkload : public Workload {
 	TraceIterator* trace_iterator;
 
 	/* states */
-	std::list<std::string> line_list;
 
 	TraceWorkload(long key_size, long value_size, std::string trace_path, unsigned int seed);
 	void next_op(Operation *op) override;
