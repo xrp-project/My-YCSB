@@ -1,7 +1,7 @@
 database:
   key_size: 33
-  value_size: 459
-  nr_entry: 4463369
+  value_size: 536
+  nr_entry: 7377763
 workload:
   nr_warmup_op: 10000000
   warmup_runtime_seconds: 240

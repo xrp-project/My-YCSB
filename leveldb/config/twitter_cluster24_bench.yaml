@@ -1,7 +1,7 @@
 database:
-  key_size: 16
-  value_size: 35
-  nr_entry: 1896120
+  key_size: 33
+  value_size: 674
+  nr_entry: 658146
 workload:
   nr_warmup_op: 10000000
   warmup_runtime_seconds: 240
@@ -17,11 +17,11 @@ workload:
     read_modify_write: 0
   request_distribution: trace
   zipfian_constant: 0.99
-  trace_file: /mydata/twitter_traces/cluster18_bench.txt
+  trace_file: /mydata/twitter_traces/cluster24_bench.txt
   trace_type: twitter_bench
   scan_length: 100
 leveldb:
-  data_dir: /mydata/leveldb_twitter_cluster18_db
+  data_dir: /mydata/leveldb_twitter_cluster24_db
   options_file: /mydata/My-YCSB/rocksdb/config/rocksdb_rubble_16gb_config.ini
   cache_size: 100000000
   print_stats: true
