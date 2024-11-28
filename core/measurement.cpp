@@ -22,7 +22,7 @@ void OpMeasurement::set_max_progress(long new_max_progress) {
 }
 
 void OpMeasurement::start_measure() {
-	int total_nr_client = this->per_client_latency_vec.size();
+	unsigned long total_nr_client = this->per_client_latency_vec.size();
 	int prev_nr_active_client = this->nr_active_client.fetch_add(1);
 	if (prev_nr_active_client == total_nr_client - 1) {
 		this->start_time = std::chrono::steady_clock::now();
@@ -31,7 +31,7 @@ void OpMeasurement::start_measure() {
 }
 
 void OpMeasurement::finish_measure() {
-	int total_nr_client = this->per_client_latency_vec.size();
+	unsigned long total_nr_client = this->per_client_latency_vec.size();
 	int prev_nr_active_client = this->nr_active_client.fetch_sub(1);
 	if (prev_nr_active_client == total_nr_client) {
 		this->finished.store(true);
@@ -114,8 +114,8 @@ double OpMeasurement::get_latency_percentile(OperationType type, float percentil
 	double left_index = floor(exact_index);
 	double right_index = ceil(exact_index);
 
-	double left_value = this->final_latency_vec[type][(long) left_index];
-	double right_value = this->final_latency_vec[type][(long) right_index];
+	double left_value = this->final_latency_vec[type][(unsigned long) left_index];
+	double right_value = this->final_latency_vec[type][(unsigned long) right_index];
 
 	double value = left_value + (exact_index - left_index) * (right_value - left_value);
 	return value;

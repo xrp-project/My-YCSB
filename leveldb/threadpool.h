@@ -33,13 +33,13 @@ class ThreadPool {
         for (size_t i = 0; i < threads; ++i)
             workers.emplace_back([this] {
                 // Get the thread ID
-                int ret = syscall(SYS_gettid);
+                long ret = syscall(SYS_gettid);
                 if (ret < 0) {
                     throw std::runtime_error("Failed to get thread ID");
                 }
                 {
                     std::unique_lock<std::mutex> lock(this->queue_mutex);
-                    thread_pids.push_back(ret);
+                    thread_pids.push_back((int)ret);
                 }
 
                 for (;;) {

@@ -140,7 +140,7 @@ void ZipfianWorkload::next_op(Operation *op) {
 		this->op_prop.op[UPDATE] = 0;
 		this->op_prop.op[READ_MODIFY_WRITE] = 0;
 		// fill the scan_pids map with the tid of the thread
-		int tid = syscall(SYS_gettid);
+		long tid = syscall(SYS_gettid);
 		if (tid < 0) {
 			throw std::runtime_error("Failed to get thread ID");
 		}
@@ -148,7 +148,7 @@ void ZipfianWorkload::next_op(Operation *op) {
 		char *enable_bpf_scan_map_env = getenv("ENABLE_BPF_SCAN_MAP");
 		if (enable_bpf_scan_map_env != nullptr) {
 			fprintf(stderr, "Got ENABLE_BPF_SCAN_MAP=%s\n", enable_bpf_scan_map_env);
-			fill_bpf_map_with_scan_pid(tid);
+			fill_bpf_map_with_scan_pid((int)tid);
 		}
 	}
 	if (running_sum += int(this->op_prop.op[UPDATE] * 100), this->op_prop.op[UPDATE] != 0 && op_random_int <= running_sum) {
@@ -256,7 +256,7 @@ void InitWorkload::next_op(Operation *op) {
 	if (!this->has_next_op_unsafe())
 		throw std::invalid_argument("does not have next op");
 	op->type = INSERT;
-	this->generate_key_string(op->key_buffer, this->start_key + this->key_shuffle[this->cur_nr_entry++]);
+	this->generate_key_string(op->key_buffer, this->start_key + (long)this->key_shuffle[this->cur_nr_entry++]);
 	this->generate_value_string(op->value_buffer);
 	op->is_last_op = !this->has_next_op_unsafe();
 	this->lock.unlock();

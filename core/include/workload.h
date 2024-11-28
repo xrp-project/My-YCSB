@@ -31,7 +31,7 @@ struct Operation {
 	OperationType type;
 	char *key_buffer;
 	char *value_buffer;  /* for UPDATE, INSERT, and READ_MODIFY_WRITE */
-	int value_buffer_size;
+	long value_buffer_size;
 	char *reply_value_buffer;  /* for READ */
 	long scan_length;  /* for SCAN */
 	bool is_last_op;
