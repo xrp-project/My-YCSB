@@ -5,7 +5,7 @@
 
 #include "client.h"
 #include "leveldb/db.h"
-#include "threadpool.h"
+//#include "threadpool.h"
 
 struct LevelDBFactory;
 
