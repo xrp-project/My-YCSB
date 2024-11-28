@@ -8,7 +8,7 @@ database:
 # Workload Parameters
 workload:
   nr_warmup_op: 10000000
-  warmup_runtime_seconds: 240
+  warmup_runtime_seconds: 45
   runtime_seconds: 240
   nr_op: 10000000
   nr_thread: 8
@@ -30,7 +30,7 @@ workload:
 
 # LevelDB Parameters
 leveldb:
-  data_dir: "/mydata/leveldb_db_temp"
+  data_dir: "/mydata/leveldb_myycsb_db_temp"
   options_file: "/mydata/My-YCSB/rocksdb/config/rocksdb_rubble_16gb_config.ini"
   cache_size: 100000000
   print_stats: true
