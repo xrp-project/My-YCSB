@@ -151,6 +151,7 @@ void run_init_trace_workload_with_op_measurement(const char *task, ClientFactory
 	InitTraceWorkload *workload = new InitTraceWorkload(key_size, value_size, trace_file, trace_type);
 	int64_t nr_op = workload->nr_op;
 	int nr_thread = 1;
+	fprintf(stderr, "nr_op: %ld\n", nr_op);
 	run_workload_with_op_measurement(task, factory, (Workload **)&workload, nr_thread, nr_op, 0, nr_thread * nr_op, 0, nullptr);
 	delete workload;
 }
