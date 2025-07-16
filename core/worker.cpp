@@ -1,4 +1,5 @@
 #include <chrono>
+#include <thread>
 #include "worker.h"
 
 void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measurement, long next_op_interval_ns) {
@@ -16,8 +17,9 @@ void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measure
 			break;
 		}
 		workload->next_op(&op);
-		while (std::chrono::steady_clock::now() < next_op_time) {
-			/* busy waiting */
+
+		if (std::chrono::steady_clock::now() < next_op_time) {
+			std::this_thread::sleep_until(next_op_time);
 		}
 		start_time = std::chrono::steady_clock::now();
 		client->do_operation(&op);
