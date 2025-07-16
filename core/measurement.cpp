@@ -40,12 +40,12 @@ void OpMeasurement::finish_measure() {
 }
 
 void OpMeasurement::finalize_measure() {
-	for (int i = 0; i < NR_OP_TYPE; ++i) {
-		for (const auto& client_vec : this->per_client_latency_vec) {
-			this->final_latency_vec[i].insert(this->final_latency_vec[i].end(), client_vec.second[i].begin(), client_vec.second[i].end());
-		}
-		std::sort(this->final_latency_vec[i].begin(), this->final_latency_vec[i].end());
-	}
+	// for (int i = 0; i < NR_OP_TYPE; ++i) {
+	// 	for (const auto& client_vec : this->per_client_latency_vec) {
+	// 		this->final_latency_vec[i].insert(this->final_latency_vec[i].end(), client_vec.second[i].begin(), client_vec.second[i].end());
+	// 	}
+	// 	std::sort(this->final_latency_vec[i].begin(), this->final_latency_vec[i].end());
+	// }
 	this->final_result_lock.unlock();
 }
 
@@ -57,8 +57,8 @@ void OpMeasurement::record_op(OperationType type, double latency, int id) {
 	).count();
 	++this->op_count_arr[type];
 	++this->rt_op_count_arr[type];
-	this->per_client_latency_vec[id][type].push_back(latency);
-	this->per_client_timestamp_vec[id][type].push_back(duration);
+	// this->per_client_latency_vec[id][type].push_back(latency);
+	// this->per_client_timestamp_vec[id][type].push_back(duration);
 }
 
 void OpMeasurement::record_progress(long progress_delta) {
