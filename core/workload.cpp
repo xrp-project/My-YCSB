@@ -2,6 +2,13 @@
 #include <random>
 #include <algorithm>
 #include "workload.h"
+// for sys_gettid
+#include <unistd.h>
+#include <sys/syscall.h>
+
+#include <bpf/bpf.h>
+#include <bpf/libbpf.h>
+#include <iostream>
 
 const char* operation_type_name[] = {
 	"UPDATE", "INSERT", "READ", "SCAN", "READ_MODIFY_WRITE"
@@ -98,24 +105,64 @@ bool ZipfianWorkload::has_next_op() {
 	return this->cur_nr_op < this->nr_op;
 }
 
+// void fill_bpf_map_with_scan_pid(int pid) {
+// 	std::string map_path = "/sys/fs/bpf/cache_ext/scan_pids";
+// 	int map_fd = bpf_obj_get(map_path.c_str());
+// 	if (map_fd < 0) {
+// 		std::cerr << "Failed to get map file descriptor from " << map_path
+// 					<< std::endl;
+// 		throw std::runtime_error("Failed to get map file descriptor");
+// 	}
+// 	// First clear the map
+// 	int key = pid;
+// 	fprintf(stderr, "Got thread ID: (key=%d, pid=%d)\n", key, pid);
+// 	int value = 1;
+// 	int ret = bpf_map_update_elem(map_fd, &key, &value, BPF_ANY);
+// 	if (ret < 0) {
+// 		throw std::runtime_error("Failed to update BPF map");
+// 	}
+// }
+
+
 void ZipfianWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	double op_random = this->generate_random_double(&this->seed);
 	int op_random_int = (int) (op_random * 100) % 101;
 	int running_sum = 0;
-	if (running_sum += int(this->op_prop.op[UPDATE] * 100), op_random_int <= running_sum) {
+	// if (!this->do_only_scans && this->op_prop.op[SCAN] > 0) {
+	// 	this->op_prop.op[READ] += this->op_prop.op[SCAN];
+	// 	this->op_prop.op[SCAN] = 0;
+	// } else if (this->do_only_scans && this->op_prop.op[SCAN] < 1) {
+	// 	this->op_prop.op[SCAN] = 1;
+	// 	this->op_prop.op[READ] = 0;
+	// 	this->op_prop.op[INSERT] = 0;
+	// 	this->op_prop.op[UPDATE] = 0;
+	// 	this->op_prop.op[READ_MODIFY_WRITE] = 0;
+	// 	// fill the scan_pids map with the tid of the thread
+	// 	long tid = syscall(SYS_gettid);
+	// 	if (tid < 0) {
+	// 		throw std::runtime_error("Failed to get thread ID");
+	// 	}
+	// 	// Check the env var ENABLE_BPF_SCAN_MAP
+	// 	char *enable_bpf_scan_map_env = getenv("ENABLE_BPF_SCAN_MAP");
+	// 	if (enable_bpf_scan_map_env != nullptr) {
+	// 		fprintf(stderr, "Got ENABLE_BPF_SCAN_MAP=%s\n", enable_bpf_scan_map_env);
+	// 		fill_bpf_map_with_scan_pid((int)tid);
+	// 	}
+	// }
+	if (running_sum += int(this->op_prop.op[UPDATE] * 100), /*this->op_prop.op[UPDATE] != 0 && */ op_random_int <= running_sum) {
 		op->type = UPDATE;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += int(this->op_prop.op[INSERT] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[INSERT] * 100), /*this->op_prop.op[INSERT] != 0 &&*/ op_random_int <= running_sum) {
 		op->type = INSERT;
 		this->generate_value_string(op->value_buffer);
-	} else if (running_sum += int(this->op_prop.op[READ] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ] * 100), /*this->op_prop.op[READ] != 0 &&*/ op_random_int <= running_sum) {
 		op->type = READ;
-	} else if (running_sum += int(this->op_prop.op[SCAN] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[SCAN] * 100), /*this->op_prop.op[SCAN] != 0 &&*/ op_random_int <= running_sum) {
 		op->type = SCAN;
 		op->scan_length = this->scan_length;
-	} else if (running_sum += int(this->op_prop.op[READ_MODIFY_WRITE] * 100), op_random_int <= running_sum) {
+	} else if (running_sum += int(this->op_prop.op[READ_MODIFY_WRITE] * 100), /*this->op_prop.op[READ_MODIFY_WRITE] != 0 &&*/ op_random_int <= running_sum) {
 		op->type = READ_MODIFY_WRITE;
 		this->generate_value_string(op->value_buffer);
 	} else {
@@ -124,6 +171,10 @@ void ZipfianWorkload::next_op(Operation *op) {
 		throw std::invalid_argument("failed to generate an operation");
 	}
 	unsigned long key = this->generate_zipfian_random_ulong(true) % ((unsigned long) this->nr_entry);
+	// If record_keys is set to true, record op's key
+	if (this->record_keys) {
+		this->recorded_keys.push_back(key);
+	}
 	this->generate_key_string(op->key_buffer, key);
 	++this->cur_nr_op;
 	op->is_last_op = !this->has_next_op();
@@ -139,6 +190,7 @@ ZipfianWorkload * ZipfianWorkload::clone(unsigned int new_seed) {
 	copy->alpha = this->alpha;
 	copy->eta = this->eta;
 	copy->nr_entry = this->nr_entry;
+	copy->record_keys = this->record_keys;
 	return copy;
 }
 
@@ -204,7 +256,7 @@ void InitWorkload::next_op(Operation *op) {
 	if (!this->has_next_op_unsafe())
 		throw std::invalid_argument("does not have next op");
 	op->type = INSERT;
-	this->generate_key_string(op->key_buffer, this->start_key + this->key_shuffle[this->cur_nr_entry++]);
+	this->generate_key_string(op->key_buffer, this->start_key + (long)this->key_shuffle[this->cur_nr_entry++]);
 	this->generate_value_string(op->value_buffer);
 	op->is_last_op = !this->has_next_op_unsafe();
 	this->lock.unlock();
@@ -325,64 +377,28 @@ void LatestWorkload::generate_value_string(char *value_buffer) {
 	value_buffer[this->value_size - 1] = '\0';
 }
 
-TraceWorkload::TraceWorkload(long key_size, long value_size, long nr_op, std::string trace_path, unsigned int seed)
-: Workload(key_size, value_size), nr_op(nr_op), trace_path(trace_path), cur_nr_op(0), seed(seed) {
-	this->trace_file.open(this->trace_path);
-	if (!this->trace_file.is_open())
-		throw std::invalid_argument("unable to open trace file");
-	for (long i = 0; i < nr_op; ++i) {
-		std::string line;
-		if (!std::getline(this->trace_file, line))
-			throw std::invalid_argument("failed to get the next line from the trace file");
-		this->line_list.push_back(line);
-	}
-	this->trace_file.close();
+TraceWorkload::TraceWorkload(long key_size, long value_size, std::string trace_path, unsigned int seed)
+: Workload(key_size, value_size), trace_path(trace_path), seed(seed) {
+	// no-op
 }
 
 bool TraceWorkload::has_next_op() {
-	return this->cur_nr_op < this->nr_op;
+	// TODO: Fix this
+	return this->trace_iterator->has_next_op();
 }
 
 void TraceWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 
-	std::string line = this->line_list.front();
-	this->line_list.pop_front();
-
-	/* trace file format:
-	 * [UPDATE/READ/READ_MODIFY_WRITE],[key string]
-	 * SCAN,[start key string],[scan length]
-	 */
-	std::stringstream line_stream(line);
-	std::string op_type, key;
-	if (!std::getline(line_stream, op_type, ','))
-		throw std::invalid_argument("failed to get the op type");
-	if (!std::getline(line_stream, key, ','))
-		throw std::invalid_argument("failed to get the key");
-
-	if (op_type == "UPDATE") {
-		op->type = UPDATE;
-		this->generate_value_string(op->value_buffer);
-	} else if (op_type == "INSERT") {
-		op->type = INSERT;
-		this->generate_value_string(op->value_buffer);
-	} else if (op_type == "READ") {
-		op->type = READ;
-	} else if (op_type == "SCAN") {
-		std::string scan_length;
-		if (!std::getline(line_stream, scan_length, ','))
-			throw std::invalid_argument("failed to get the scan length");
-		op->type = SCAN;
-		op->scan_length = std::stol(scan_length, nullptr, 10);
-	} else if (op_type == "READ_MODIFY_WRITE") {
-		op->type = READ_MODIFY_WRITE;
-		this->generate_value_string(op->value_buffer);
-	} else {
-		throw std::invalid_argument("invalid trace operation");
+	// Just call the iterator, wrapped in the shared_ptr
+	bool has_next_op = this->trace_iterator->next_op(op);
+	if (!has_next_op) {
+		throw std::invalid_argument("does not have next op (2)");
 	}
-	strcpy(op->key_buffer, key.c_str());
-	++this->cur_nr_op;
+	if (op->type == INSERT || op->type == UPDATE) {
+		this->generate_value_string(op->value_buffer);
+	}
 	op->is_last_op = !this->has_next_op();
 }
 
@@ -391,4 +407,19 @@ void TraceWorkload::generate_value_string(char *value_buffer) {
 		value_buffer[i] = 'a' + (rand_r(&this->seed) % ('z' - 'a' + 1));
 	}
 	value_buffer[this->value_size - 1] = '\0';
+}
+
+InitTraceWorkload::InitTraceWorkload(long key_size, long value_size, std::string trace_path, std::string trace_type)
+	: TraceWorkload(key_size, value_size, trace_path, 1) {
+	fprintf(stderr, "InitTraceWorkload: trace_path=%s, trace_type=%s\n", trace_path.c_str(), trace_type.c_str());
+	this->trace_iterator = new TraceIterator(trace_path, trace_type);
+	this->nr_op = this->trace_iterator->nr_op();
+}
+
+bool InitTraceWorkload::has_next_op() {
+	return TraceWorkload::has_next_op();
+}
+
+void InitTraceWorkload::next_op(Operation *op) {
+	TraceWorkload::next_op(op);
 }
