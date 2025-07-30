@@ -41,7 +41,7 @@ void UniformWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	double op_random = this->generate_random_double(&this->seed);
-	int op_random_int = (int) (op_random * 100) % 101;
+	int op_random_int = 1 + (int) (op_random * 100);
 	int running_sum = 0;
 	if (running_sum += int(this->op_prop.op[UPDATE] * 100), op_random_int <= running_sum) {
 		op->type = UPDATE;
@@ -128,7 +128,7 @@ void ZipfianWorkload::next_op(Operation *op) {
 	if (!this->has_next_op())
 		throw std::invalid_argument("does not have next op");
 	double op_random = this->generate_random_double(&this->seed);
-	int op_random_int = (int) (op_random * 100) % 101;
+	int op_random_int = 1 + (int) (op_random * 100);
 	int running_sum = 0;
 	// if (!this->do_only_scans && this->op_prop.op[SCAN] > 0) {
 	// 	this->op_prop.op[READ] += this->op_prop.op[SCAN];
