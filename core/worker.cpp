@@ -175,18 +175,18 @@ void run_uniform_workload_with_op_measurement(const char *task, ClientFactory *f
 void run_zipfian_workload_with_op_measurement(const char *task, ClientFactory *factory, long nr_entry, long key_size, long value_size,
                                               long scan_length, int nr_thread, struct OpProportion op_prop, double zipfian_constant, long nr_op,
 											  long runtime_seconds, long next_op_interval_ns, const char *latency_file) {
-	//int scan_worker_count = 1;
+	int scan_worker_count = 1;
 	ZipfianWorkload **workload_arr = new ZipfianWorkload *[nr_thread];
 	printf("ZipfianWorkload: start initializing zipfian variables, might take a while\n");
 	ZipfianWorkload base_workload(key_size, value_size, scan_length, nr_entry, nr_op, op_prop, zipfian_constant, 0);
 	base_workload.record_keys = true;
 	for (unsigned int thread_index = 0; thread_index < nr_thread; ++thread_index) {
 		workload_arr[thread_index] = base_workload.clone(thread_index);
-		// if (scan_worker_count > 0 && thread_index < scan_worker_count && op_prop.op[SCAN] > 0) {
-		// 	workload_arr[thread_index]->do_only_scans = true;
-		// } else {
-		// 	workload_arr[thread_index]->do_only_scans = false;
-		// }
+		if (scan_worker_count > 0 && thread_index < scan_worker_count && op_prop.op[SCAN] > 0) {
+			workload_arr[thread_index]->do_only_scans = true;
+		} else {
+			workload_arr[thread_index]->do_only_scans = false;
+		}
 	}
 
 	run_workload_with_op_measurement(task, factory, (Workload **)workload_arr, nr_thread, nr_op, runtime_seconds, nr_thread * nr_op, next_op_interval_ns, latency_file);
