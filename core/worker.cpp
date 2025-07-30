@@ -4,8 +4,6 @@
 
 void worker_thread_fn(Client *client, Workload *workload, OpMeasurement *measurement, long next_op_interval_ns) {
 	Operation op;
-	// Print key and value sizes
-	fprintf(stderr, "Key size: %ld, Value size: %ld\n", workload->key_size, workload->value_size);
 	op.key_buffer = new char[workload->key_size];
 	op.value_buffer = new char[workload->value_size];
 	op.value_buffer_size = workload->value_size;
