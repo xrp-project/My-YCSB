@@ -17,7 +17,7 @@ workload:
     read_modify_write: 0
   request_distribution: trace
   zipfian_constant: 0.99
-  trace_file: /mydata/twitter_traces/cluster52_bench.txt
+  trace_file: /mydata/twitter-traces/cluster52_bench.txt
   trace_type: twitter_bench
   scan_length: 100
 leveldb:
